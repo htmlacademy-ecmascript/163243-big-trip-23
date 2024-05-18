@@ -18,7 +18,7 @@ const MOCK_DESCRIPTION = [
 const DESCTINATION_DESCRIPTION_SENTENCES = 5;
 const PICTURE_DESCRIPTION_SENTENCES = 1;
 
-const mockDistinations =
+const mockDestinations =
 [
   {
     'id': 'cfe416cq-10xa-ye10-8077-2fs9a01edcab',
@@ -55,5 +55,6 @@ const mockDistinations =
   }
 ];
 
-export { mockDistinations };
+
+export { mockDestinations };
 

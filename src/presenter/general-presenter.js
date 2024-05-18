@@ -6,15 +6,16 @@ import EditPointFormView from '../view/edit-point-form-view.js';
 import WaypointView from '../view/waypoint-view.js';
 import { render } from '../render.js';
 
-const WAYPOINTS_COUNT = 3;
+// const WAYPOINTS_COUNT = 3;
 
 export default class GeneralPresenter {
   eventListComponent = new EventsListView;
 
-  constructor() {
+  constructor(pointModel) {
     this.tripMain = document.querySelector('.trip-main');
     this.tripFilters = document.querySelector('.trip-controls__filters');
     this.tripEvents = document.querySelector('.trip-events');
+    this.pointModel = pointModel;
   }
 
   renderTripInfo() {
@@ -29,26 +30,27 @@ export default class GeneralPresenter {
     render(new SortView(), this.tripEvents);
   }
 
-  renderEditForm() {
-    render(new EditPointFormView, this.eventListComponent.getElement());
+  renderEditForm(destinations) {
+    render(new EditPointFormView(destinations), this.eventListComponent.getElement());
   }
 
-  renderWaypoints() {
-    for(let i = 0; i < WAYPOINTS_COUNT; i++) {
-      render(new WaypointView(), this.eventListComponent.getElement());
-    }
+  renderWaypoint(point, distinations, offers) {
+    render(new WaypointView(point, distinations, offers), this.eventListComponent.getElement());
   }
 
-  renderTripEvents() {
+  renderTripEvents(destinations) {
     render(this.eventListComponent, this.tripEvents);
-    this.renderEditForm();
-    this.renderWaypoints();
+    this.renderEditForm(destinations);
   }
 
   init() {
+    const points = this.pointModel.getPoints();
+    const destinations = this.pointModel.getDestinations();
+    const offers = this.pointModel.getOffers();
     this.renderTripInfo();
     this.renderFilters();
     this.renderSorting();
-    this.renderTripEvents();
+    this.renderTripEvents(destinations);
+    points.forEach((point) => this.renderWaypoint(point, destinations, offers));
   }
 }

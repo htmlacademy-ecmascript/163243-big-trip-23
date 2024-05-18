@@ -14,7 +14,7 @@ const mockOffers = [
       },
       {
         'id': 'b4c3e4e6-9053-42ce-b747-e281314baa33',
-        'title': 'Kuritzanki',
+        'title': 'Kurtizanki',
         'price': 12210
       }
     ]

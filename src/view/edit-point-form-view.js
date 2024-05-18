@@ -1,6 +1,9 @@
 import { createElement } from '../render.js';
+import { TRIP_TYPES } from '../const.js';
+import { humanizeDate } from '../utils.js';
+import dayjs from 'dayjs';
 
-const EVENT_TYPES = ['taxi', 'bus', 'train', 'ship', 'drive', 'flight', 'check-in', 'sightseeing', 'restaurant'];
+const DATE_FORMAT = 'MM/DD/YY h:mm';
 
 const createEventTypeItemTemplate = (type) =>
   `
@@ -10,8 +13,15 @@ const createEventTypeItemTemplate = (type) =>
     </div>
   `;
 
-const createEditPointFormViewTemplate = () =>
+const cretateOptionsTemplate = (destination, currentDestination) =>
   `
+  <option ${destination.name === currentDestination.name ? 'selected' : ''} value="${destination.name}">${destination.name}</option>
+  `;
+
+const createEditPointItemTemplate = (destinations) => {
+  const currentDestination = destinations[0];
+  return `
+  <li class="trip-events__item">
   <form class="event event--edit" action="#" method="post">
     <header class="event__header">
       <div class="event__type-wrapper">
@@ -23,7 +33,7 @@ const createEditPointFormViewTemplate = () =>
         <div class="event__type-list">
           <fieldset class="event__type-group">
             <legend class="visually-hidden">Event type</legend>
-            ${EVENT_TYPES.map((type) => createEventTypeItemTemplate(type)).join('')}
+            ${TRIP_TYPES.map((type) => createEventTypeItemTemplate(type)).join('')}
           </fieldset>
         </div>
       </div>
@@ -31,19 +41,17 @@ const createEditPointFormViewTemplate = () =>
         <label class="event__label  event__type-output" for="event-destination-1">
           Flight
         </label>
-        <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="Chamonix" list="destination-list-1">
+        <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" list="destination-list-1">
         <datalist id="destination-list-1">
-          <option value="Amsterdam"></option>
-          <option value="Geneva"></option>
-          <option value="Chamonix"></option>
+          ${destinations.map((destination) => cretateOptionsTemplate(destination, currentDestination)).join('')}
         </datalist>
       </div>
       <div class="event__field-group  event__field-group--time">
         <label class="visually-hidden" for="event-start-time-1">From</label>
-        <input class="event__input  event__input--time" id="event-start-time-1" type="text" name="event-start-time" value="18/03/19 12:25">
+        <input class="event__input  event__input--time" id="event-start-time-1" type="text" name="event-start-time" value="${humanizeDate(dayjs(), DATE_FORMAT)}">
         &mdash;
         <label class="visually-hidden" for="event-end-time-1">To</label>
-        <input class="event__input  event__input--time" id="event-end-time-1" type="text" name="event-end-time" value="18/03/19 13:35">
+        <input class="event__input  event__input--time" id="event-end-time-1" type="text" name="event-end-time" value="${humanizeDate(dayjs().add(1, 'hour'), DATE_FORMAT)}">
       </div>
       <div class="event__field-group  event__field-group--price">
         <label class="event__label" for="event-price-1">
@@ -106,22 +114,21 @@ const createEditPointFormViewTemplate = () =>
       </section>
       <section class="event__section  event__section--destination">
         <h3 class="event__section-title  event__section-title--destination">Destination</h3>
-        <p class="event__destination-description">Chamonix-Mont-Blanc (usually shortened to Chamonix) is a resort area near the junction of France, Switzerland and Italy. At the base of Mont Blanc, the highest summit in the Alps, it's renowned for its skiing.</p>
+        <p class="event__destination-description">${currentDestination.description}</p>
       </section>
     </section>
   </form>
+  </li>
   `;
-
-const createEditPointsItemTemplate = () =>
-  `
-    <li class="trip-events__item">
-      ${createEditPointFormViewTemplate()}
-    </li>
-  `;
+};
 
 export default class EditPointFormView {
+  constructor(destinations) {
+    this.destinations = destinations;
+  }
+
   getTemplate() {
-    return createEditPointsItemTemplate();
+    return createEditPointItemTemplate(this.destinations);
   }
 
   getElement() {
