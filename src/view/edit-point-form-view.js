@@ -1,9 +1,22 @@
 import { createElement } from '../render.js';
 import { TRIP_TYPES } from '../const.js';
-import { humanizeDate } from '../utils.js';
+import { humanizeDate, convertToKebabCase } from '../utils.js';
 import dayjs from 'dayjs';
 
 const DATE_FORMAT = 'MM/DD/YY h:mm';
+const MOCK_TYPE = 'flight';
+
+const createOfferItemTemplate = (offer) =>
+  `
+  <div class="event__offer-selector">
+    <input class="event__offer-checkbox  visually-hidden" id="event-offer-${convertToKebabCase(offer.title)}-1" type="checkbox" name="event-offer-${convertToKebabCase(offer.title)}" checked>
+      <label class="event__offer-label" for="event-offer-${convertToKebabCase(offer.title)}-1">
+        <span class="event__offer-title">${offer.title}</span>
+          &plus;&euro;&nbsp;
+        <span class="event__offer-price">${offer.price}</span>
+      </label>
+  </div>
+  `;
 
 const createEventTypeItemTemplate = (type) =>
   `
@@ -18,8 +31,9 @@ const cretateOptionsTemplate = (destination, currentDestination) =>
   <option ${destination.name === currentDestination.name ? 'selected' : ''} value="${destination.name}">${destination.name}</option>
   `;
 
-const createEditPointItemTemplate = (destinations) => {
+const createEditPointItemTemplate = (destinations, offers) => {
   const currentDestination = destinations[0];
+  const offersByType = offers.find((offer) => offer.type === MOCK_TYPE);
   return `
   <li class="trip-events__item">
   <form class="event event--edit" action="#" method="post">
@@ -70,47 +84,7 @@ const createEditPointItemTemplate = (destinations) => {
       <section class="event__section  event__section--offers">
         <h3 class="event__section-title  event__section-title--offers">Offers</h3>
         <div class="event__available-offers">
-          <div class="event__offer-selector">
-            <input class="event__offer-checkbox  visually-hidden" id="event-offer-luggage-1" type="checkbox" name="event-offer-luggage" checked>
-            <label class="event__offer-label" for="event-offer-luggage-1">
-              <span class="event__offer-title">Add luggage</span>
-              &plus;&euro;&nbsp;
-              <span class="event__offer-price">50</span>
-            </label>
-          </div>
-          <div class="event__offer-selector">
-            <input class="event__offer-checkbox  visually-hidden" id="event-offer-comfort-1" type="checkbox" name="event-offer-comfort" checked>
-            <label class="event__offer-label" for="event-offer-comfort-1">
-              <span class="event__offer-title">Switch to comfort</span>
-              &plus;&euro;&nbsp;
-              <span class="event__offer-price">80</span>
-            </label>
-          </div>
-          <div class="event__offer-selector">
-            <input class="event__offer-checkbox  visually-hidden" id="event-offer-meal-1" type="checkbox" name="event-offer-meal">
-            <label class="event__offer-label" for="event-offer-meal-1">
-              <span class="event__offer-title">Add meal</span>
-              &plus;&euro;&nbsp;
-              <span class="event__offer-price">15</span>
-            </label>
-          </div>
-          <div class="event__offer-selector">
-            <input class="event__offer-checkbox  visually-hidden" id="event-offer-seats-1" type="checkbox" name="event-offer-seats">
-            <label class="event__offer-label" for="event-offer-seats-1">
-              <span class="event__offer-title">Choose seats</span>
-              &plus;&euro;&nbsp;
-              <span class="event__offer-price">5</span>
-            </label>
-          </div>
-          <div class="event__offer-selector">
-            <input class="event__offer-checkbox  visually-hidden" id="event-offer-train-1" type="checkbox" name="event-offer-train">
-            <label class="event__offer-label" for="event-offer-train-1">
-              <span class="event__offer-title">Travel by train</span>
-              &plus;&euro;&nbsp;
-              <span class="event__offer-price">40</span>
-            </label>
-          </div>
-        </div>
+        ${offersByType.offers.map((offer) => createOfferItemTemplate(offer)).join('')}
       </section>
       <section class="event__section  event__section--destination">
         <h3 class="event__section-title  event__section-title--destination">Destination</h3>
@@ -123,12 +97,13 @@ const createEditPointItemTemplate = (destinations) => {
 };
 
 export default class EditPointFormView {
-  constructor(destinations) {
+  constructor(destinations, offers) {
     this.destinations = destinations;
+    this.offers = offers;
   }
 
   getTemplate() {
-    return createEditPointItemTemplate(this.destinations);
+    return createEditPointItemTemplate(this.destinations, this.offers);
   }
 
   getElement() {

@@ -43,6 +43,26 @@ const mockOffers = [
         'price': 3320
       },
     ]
+  },
+  {
+    'type': 'flight',
+    'offers': [
+      {
+        'id': 'b4c3e4e6-9053-42ce-b747-e281314baa51',
+        'title': 'Can honk',
+        'price': 3320
+      },
+      {
+        'id': 'b4c3e4e6-9053-42ce-b747-e281314baa31',
+        'title': 'Upgrade to a business class',
+        'price': 120
+      },
+      {
+        'id': 'b4c3e4e6-9053-42ce-b747-e281314baa32',
+        'title': 'BlackJack',
+        'price': 1200
+      },
+    ]
   }
 ];
 

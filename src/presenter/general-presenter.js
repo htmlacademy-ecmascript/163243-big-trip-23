@@ -30,17 +30,17 @@ export default class GeneralPresenter {
     render(new SortView(), this.tripEvents);
   }
 
-  renderEditForm(destinations) {
-    render(new EditPointFormView(destinations), this.eventListComponent.getElement());
+  renderEditForm(destinations, offers) {
+    render(new EditPointFormView(destinations, offers), this.eventListComponent.getElement());
   }
 
   renderWaypoint(point, distinations, offers) {
     render(new WaypointView(point, distinations, offers), this.eventListComponent.getElement());
   }
 
-  renderTripEvents(destinations) {
+  renderTripEvents(destinations, offers) {
     render(this.eventListComponent, this.tripEvents);
-    this.renderEditForm(destinations);
+    this.renderEditForm(destinations, offers);
   }
 
   init() {
@@ -50,7 +50,7 @@ export default class GeneralPresenter {
     this.renderTripInfo();
     this.renderFilters();
     this.renderSorting();
-    this.renderTripEvents(destinations);
+    this.renderTripEvents(destinations, offers);
     points.forEach((point) => this.renderWaypoint(point, destinations, offers));
   }
 }
