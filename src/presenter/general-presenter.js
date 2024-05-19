@@ -4,7 +4,7 @@ import SortView from '../view/sort-view.js';
 import EventsListView from '../view/events-list-view.js';
 import EditPointFormView from '../view/edit-point-form-view.js';
 import WaypointView from '../view/waypoint-view.js';
-import { render } from '../render.js';
+import { render } from '../framework/render.js';
 
 // const WAYPOINTS_COUNT = 3;
 
@@ -31,11 +31,11 @@ export default class GeneralPresenter {
   }
 
   renderEditForm(destinations, offers) {
-    render(new EditPointFormView(destinations, offers), this.eventListComponent.getElement());
+    render(new EditPointFormView(destinations, offers), this.eventListComponent.element);
   }
 
   renderWaypoint(point, distinations, offers) {
-    render(new WaypointView(point, distinations, offers), this.eventListComponent.getElement());
+    render(new WaypointView(point, distinations, offers), this.eventListComponent.element);
   }
 
   renderTripEvents(destinations, offers) {

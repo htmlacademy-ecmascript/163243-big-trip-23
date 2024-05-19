@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
-import { createElement } from '../render.js';
 import { humanizeDate } from '../utils.js';
+import AbstractView from '../framework/view/abstract-view.js';
 
 const TIME_FORMAT = 'hh:mm';
 const SHORT_DATE_FORMAT = 'yyyy-mm-dd';
@@ -60,26 +60,15 @@ const createWaypointViewTemplate = (point, destinations, offers) => {
   `;
 };
 
-export default class WaypointView {
+export default class WaypointView extends AbstractView{
   constructor(point, destinations, offers) {
+    super();
     this.point = point;
     this.destinations = destinations;
     this.offers = offers;
   }
 
-  getTemplate() {
+  get template() {
     return createWaypointViewTemplate(this.point, this.destinations, this.offers);
-  }
-
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-
-    return this.element;
-  }
-
-  removeElement() {
-    this.element = null;
   }
 }

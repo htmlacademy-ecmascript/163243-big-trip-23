@@ -1,7 +1,7 @@
-import { createElement } from '../render.js';
 import { TRIP_TYPES } from '../const.js';
 import { humanizeDate, convertToKebabCase } from '../utils.js';
 import dayjs from 'dayjs';
+import AbstractView from '../framework/view/abstract-view.js';
 
 const DATE_FORMAT = 'MM/DD/YY h:mm';
 const MOCK_TYPE = 'flight';
@@ -96,25 +96,14 @@ const createEditPointItemTemplate = (destinations, offers) => {
   `;
 };
 
-export default class EditPointFormView {
+export default class EditPointFormView extends AbstractView {
   constructor(destinations, offers) {
+    super();
     this.destinations = destinations;
     this.offers = offers;
   }
 
-  getTemplate() {
+  get template() {
     return createEditPointItemTemplate(this.destinations, this.offers);
-  }
-
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-
-    return this.element;
-  }
-
-  removeElement() {
-    this.element = null;
   }
 }
