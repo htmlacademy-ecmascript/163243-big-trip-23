@@ -37,7 +37,7 @@ const createWaypointViewTemplate = (point, destinations, offers) => {
             &mdash;
             <time class="event__end-time" datetime="${point.dateTo}">${humanizeDate(point.dateTo, TIME_FORMAT)}</time>
           </p>
-          <p class="event__duration">${humanizeDate((dayjs(point.dateTo) - dayjs(point.dateFrom)), DELTA_TIME_FORMAT)}</p>
+          <p class="event__duration">${humanizeDate(dayjs(point.dateTo).diff(dayjs(point.dateFrom)), DELTA_TIME_FORMAT)}</p>
         </div>
         <p class="event__price">
           &euro;&nbsp;<span class="event__price-value">${point.basePrice}</span>
@@ -61,14 +61,28 @@ const createWaypointViewTemplate = (point, destinations, offers) => {
 };
 
 export default class WaypointView extends AbstractView{
-  constructor(point, destinations, offers) {
+  #point = null;
+  #destinations = null;
+  #offers = null;
+  #handleExpandClick = null;
+
+  constructor({point, destinations, offers, onExpandClick}) {
     super();
-    this.point = point;
-    this.destinations = destinations;
-    this.offers = offers;
+    this.#point = point;
+    this.#destinations = destinations;
+    this.#offers = offers;
+    this.#handleExpandClick = onExpandClick;
+
+    this.element.querySelector('.event__rollup-btn')
+      .addEventListener('click', this.#expandClickHandler);
   }
 
   get template() {
-    return createWaypointViewTemplate(this.point, this.destinations, this.offers);
+    return createWaypointViewTemplate(this.#point, this.#destinations, this.#offers);
   }
+
+  #expandClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleExpandClick();
+  };
 }
