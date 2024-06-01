@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
-import { createElement } from '../render.js';
 import { humanizeDate } from '../utils.js';
+import AbstractView from '../framework/view/abstract-view.js';
 
 const TIME_FORMAT = 'hh:mm';
 const SHORT_DATE_FORMAT = 'yyyy-mm-dd';
@@ -37,7 +37,7 @@ const createWaypointViewTemplate = (point, destinations, offers) => {
             &mdash;
             <time class="event__end-time" datetime="${point.dateTo}">${humanizeDate(point.dateTo, TIME_FORMAT)}</time>
           </p>
-          <p class="event__duration">${humanizeDate((dayjs(point.dateTo) - dayjs(point.dateFrom)), DELTA_TIME_FORMAT)}</p>
+          <p class="event__duration">${humanizeDate(dayjs(point.dateTo).diff(dayjs(point.dateFrom)), DELTA_TIME_FORMAT)}</p>
         </div>
         <p class="event__price">
           &euro;&nbsp;<span class="event__price-value">${point.basePrice}</span>
@@ -60,26 +60,29 @@ const createWaypointViewTemplate = (point, destinations, offers) => {
   `;
 };
 
-export default class WaypointView {
-  constructor(point, destinations, offers) {
-    this.point = point;
-    this.destinations = destinations;
-    this.offers = offers;
+export default class WaypointView extends AbstractView{
+  #point = null;
+  #destinations = null;
+  #offers = null;
+  #handleExpandClick = null;
+
+  constructor({point, destinations, offers, onExpandClick}) {
+    super();
+    this.#point = point;
+    this.#destinations = destinations;
+    this.#offers = offers;
+    this.#handleExpandClick = onExpandClick;
+
+    this.element.querySelector('.event__rollup-btn')
+      .addEventListener('click', this.#expandClickHandler);
   }
 
-  getTemplate() {
-    return createWaypointViewTemplate(this.point, this.destinations, this.offers);
+  get template() {
+    return createWaypointViewTemplate(this.#point, this.#destinations, this.#offers);
   }
 
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-
-    return this.element;
-  }
-
-  removeElement() {
-    this.element = null;
-  }
+  #expandClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleExpandClick();
+  };
 }

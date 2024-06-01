@@ -1,4 +1,4 @@
-import { createElement } from '../render.js';
+import AbstractView from '../framework/view/abstract-view.js';
 
 const EVENT_TYPES = ['taxi', 'bus', 'train', 'ship', 'drive', 'flight', 'check-in', 'sightseeing', 'restaurant'];
 
@@ -125,20 +125,8 @@ const createNewPointListItemTemplate = () =>
     </li>
   `;
 
-export default class NewPointFormView {
-  getTemplate() {
+export default class NewPointFormView extends AbstractView{
+  get template() {
     return createNewPointListItemTemplate();
-  }
-
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-
-    return this.element;
-  }
-
-  removeElement() {
-    this.element = null;
   }
 }
