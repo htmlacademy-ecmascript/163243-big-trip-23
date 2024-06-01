@@ -13,6 +13,7 @@ export default class GeneralPresenter {
   #tripFilters;
   #tripEvents;
   #pointModel;
+  #waypointPresenters = new Map();
 
 
   constructor(pointModel) {
@@ -44,6 +45,12 @@ export default class GeneralPresenter {
       waypointListContainer: this.#eventsListComponent.element
     });
     wayPointPresenter.init(point, destinations, offers);
+    this.#waypointPresenters.set(point.id, wayPointPresenter);
+  }
+
+  #clearWaypointList() {
+    this.#waypointPresenters.forEach((presenter) => presenter.destroy());
+    this.#waypointPresenters.clear();
   }
 
   init() {
