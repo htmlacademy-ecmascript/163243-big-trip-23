@@ -4,6 +4,7 @@ import SortView from '../view/sort-view.js';
 import EventsListView from '../view/events-list-view.js';
 import { render } from '../framework/render.js';
 import WaypointPresenter from './waypoint-presenter.js';
+import { updateItem } from '../utils.js';
 
 // const WAYPOINTS_COUNT = 3;
 
@@ -13,6 +14,7 @@ export default class GeneralPresenter {
   #tripFilters;
   #tripEvents;
   #pointModel;
+  #tripWaypoints = [];
   #waypointPresenters = new Map();
 
 
@@ -52,6 +54,11 @@ export default class GeneralPresenter {
     this.#waypointPresenters.forEach((presenter) => presenter.destroy());
     this.#waypointPresenters.clear();
   }
+
+  #handleTaskChange = (updatedWaypoint) => {
+    this.#tripWaypoints = updateItem(this.#tripWaypoints, updatedWaypoint);
+    this.#waypointPresenters.get(updatedWaypoint.id).init(updatedWaypoint);
+  };
 
   init() {
     const points = this.#pointModel.points;
