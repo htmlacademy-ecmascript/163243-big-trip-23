@@ -9,9 +9,11 @@ export default class WaypointPresenter {
   #waypoint = null;
   #destinations = null;
   #offers = null;
+  #handleDataChange = null;
 
-  constructor({waypointListContainer}) {
+  constructor({waypointListContainer, onDataChange}) {
     this.#waypointListContainer = waypointListContainer;
+    this.#handleDataChange = onDataChange;
   }
 
   init(point, destinations, offers) {
@@ -28,6 +30,7 @@ export default class WaypointPresenter {
       destinations: this.#destinations,
       offers: this.#offers,
       onExpandClick: this.#handleExpandClick,
+      onFavoriteClick: this.#handleFavoriteClick,
     });
 
     this.#waypointEditFormComponent = new EditPointFormView({
@@ -81,5 +84,13 @@ export default class WaypointPresenter {
 
   #handleExpandClick = () => this.#replaceWaypontToForm();
   #handleCollapseClick = () => this.#replaceFormToWaypoint();
-  #handleSubmitForm = () => this.#replaceFormToWaypoint();
+  #handleSubmitForm = (waypoint) => {
+    this.#handleDataChange(waypoint, this.#destinations, this.#offers);
+    this.#replaceFormToWaypoint();
+  };
+
+  #handleFavoriteClick = () => {
+    this.#handleDataChange({...this.#waypoint, isFavorite: !this.#waypoint.isFavorite}, this.#destinations, this.#offers);
+  };
+
 }

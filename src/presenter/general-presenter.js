@@ -42,9 +42,15 @@ export default class GeneralPresenter {
     render(this.#eventsListComponent, this.#tripEvents);
   }
 
+  #handleTaskChange = (updatedWaypoint, destinations, offers) => {
+    this.#tripWaypoints = updateItem(this.#tripWaypoints, updatedWaypoint);
+    this.#waypointPresenters.get(updatedWaypoint.id).init(updatedWaypoint, destinations, offers);
+  };
+
   #renderWaypoint(point, destinations, offers) {
     const wayPointPresenter = new WaypointPresenter({
-      waypointListContainer: this.#eventsListComponent.element
+      waypointListContainer: this.#eventsListComponent.element,
+      onDataChange: this.#handleTaskChange,
     });
     wayPointPresenter.init(point, destinations, offers);
     this.#waypointPresenters.set(point.id, wayPointPresenter);
@@ -55,20 +61,16 @@ export default class GeneralPresenter {
     this.#waypointPresenters.clear();
   }
 
-  #handleTaskChange = (updatedWaypoint) => {
-    this.#tripWaypoints = updateItem(this.#tripWaypoints, updatedWaypoint);
-    this.#waypointPresenters.get(updatedWaypoint.id).init(updatedWaypoint);
-  };
 
   init() {
-    const points = this.#pointModel.points;
     const destinations = this.#pointModel.destinations;
     const offers = this.#pointModel.offers;
+    this.#tripWaypoints = [...this.#pointModel.points];
     this.#renderTripInfo();
     this.#renderFilters();
     this.#renderSorting();
     this.#renderTripEvents(destinations, offers);
-    points.forEach((point) => {
+    this.#tripWaypoints.forEach((point) => {
       this.#renderWaypoint(point, destinations, offers);
       // this.#renderEditForm(point, destinations, offers);
     });
