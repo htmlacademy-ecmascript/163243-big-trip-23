@@ -2,9 +2,8 @@ import TripInfoView from '../view/trip-info-view.js';
 import FilterView from '../view/filter-view.js';
 import SortView from '../view/sort-view.js';
 import EventsListView from '../view/events-list-view.js';
-import EditPointFormView from '../view/edit-point-form-view.js';
-import WaypointView from '../view/waypoint-view.js';
-import { render, replace } from '../framework/render.js';
+import { render } from '../framework/render.js';
+import WaypointPresenter from './waypoint-presenter.js';
 
 // const WAYPOINTS_COUNT = 3;
 
@@ -36,51 +35,15 @@ export default class GeneralPresenter {
     render(new SortView(), this.#tripEvents);
   }
 
-  #renderWaypoint(point, destinations, offers) {
-    const escKeyDownHandler = (evt) => {
-      if (evt.key === 'Escape') {
-        evt.preventDefault();
-        replaceFormToWaypoint();
-        document.removeEventListener('keydown', escKeyDownHandler);
-      }
-    };
-    const formComponent = new EditPointFormView({
-      point,
-      destinations,
-      offers,
-      onCollapseClick: () => {
-        replaceFormToWaypoint();
-        document.addEventListener('keydown', escKeyDownHandler);
-      },
-      onSubmitForm: () => {
-        replaceFormToWaypoint();
-        document.removeEventListener('keydown', escKeyDownHandler);
-      }
-    });
-
-    const waypointComponent = new WaypointView({
-      point,
-      destinations,
-      offers,
-      onExpandClick: () => {
-        replaceWaypontToForm();
-        document.addEventListener('keydown', escKeyDownHandler);
-      },
-    });
-
-    function replaceWaypontToForm() {
-      replace(formComponent, waypointComponent);
-    }
-
-    function replaceFormToWaypoint() {
-      replace(waypointComponent, formComponent);
-    }
-
-    render(waypointComponent, this.#eventListComponent.element);
-  }
-
   #renderTripEvents() {
     render(this.#eventListComponent, this.#tripEvents);
+  }
+
+  #renderWaypoint(point, destinations, offers) {
+    const wayPointPresenter = new WaypointPresenter({
+      waypointListContainer: this.#eventListComponent.element
+    });
+    wayPointPresenter.init(point, destinations, offers);
   }
 
   init() {
