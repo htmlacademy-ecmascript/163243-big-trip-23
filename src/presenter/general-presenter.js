@@ -42,6 +42,10 @@ export default class GeneralPresenter {
     render(this.#eventsListComponent, this.#tripEvents);
   }
 
+  #handleModeChange = () => {
+    this.#waypointPresenters.forEach((presenter) => presenter.resetView());
+  };
+
   #handleTaskChange = (updatedWaypoint, destinations, offers) => {
     this.#tripWaypoints = updateItem(this.#tripWaypoints, updatedWaypoint);
     this.#waypointPresenters.get(updatedWaypoint.id).init(updatedWaypoint, destinations, offers);
@@ -51,6 +55,7 @@ export default class GeneralPresenter {
     const wayPointPresenter = new WaypointPresenter({
       waypointListContainer: this.#eventsListComponent.element,
       onDataChange: this.#handleTaskChange,
+      onModeChange: this.#handleModeChange
     });
     wayPointPresenter.init(point, destinations, offers);
     this.#waypointPresenters.set(point.id, wayPointPresenter);
