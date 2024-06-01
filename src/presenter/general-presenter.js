@@ -8,7 +8,7 @@ import WaypointPresenter from './waypoint-presenter.js';
 // const WAYPOINTS_COUNT = 3;
 
 export default class GeneralPresenter {
-  #eventListComponent = new EventsListView;
+  #eventsListComponent = new EventsListView;
   #tripMain;
   #tripFilters;
   #tripEvents;
@@ -36,12 +36,12 @@ export default class GeneralPresenter {
   }
 
   #renderTripEvents() {
-    render(this.#eventListComponent, this.#tripEvents);
+    render(this.#eventsListComponent, this.#tripEvents);
   }
 
   #renderWaypoint(point, destinations, offers) {
     const wayPointPresenter = new WaypointPresenter({
-      waypointListContainer: this.#eventListComponent.element
+      waypointListContainer: this.#eventsListComponent.element
     });
     wayPointPresenter.init(point, destinations, offers);
   }

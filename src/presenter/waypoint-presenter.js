@@ -1,6 +1,6 @@
 import EditPointFormView from '../view/edit-point-form-view.js';
 import WaypointView from '../view/waypoint-view.js';
-import { render, replace } from '../framework/render.js';
+import { render, replace, remove } from '../framework/render.js';
 
 export default class WaypointPresenter {
   #waypointListContainer = null;
@@ -14,10 +14,13 @@ export default class WaypointPresenter {
     this.#waypointListContainer = waypointListContainer;
   }
 
-  init(waypoint, destinations, offers) {
-    this.#waypoint = waypoint;
+  init(point, destinations, offers) {
+    this.#waypoint = point;
     this.#destinations = destinations;
     this.#offers = offers;
+
+    const prevWaypointComponent = this.#waypointComponent;
+    const prevEditFormComponent = this.#waypointEditFormComponent;
 
 
     this.#waypointComponent = new WaypointView({
@@ -34,7 +37,29 @@ export default class WaypointPresenter {
       onCollapseClick: this.#handleCollapseClick,
       onSubmitForm: this.#handleSubmitForm,
     });
-    render(this.#waypointComponent, this.#waypointListContainer);
+
+    if (prevWaypointComponent === null || prevEditFormComponent === null) {
+      render(this.#waypointComponent, this.#waypointListContainer);
+      return;
+    }
+
+    // Проверка на наличие в DOM необходима,
+    // чтобы не пытаться заменить то, что не было отрисовано
+    if (this.#waypointListContainer.contains(prevWaypointComponent.element)) {
+      replace(this.#waypointComponent, prevWaypointComponent);
+    }
+
+    if (this.#waypointListContainer.contains(prevEditFormComponent.element)) {
+      replace(this.#waypointEditFormComponent, prevEditFormComponent);
+    }
+
+    remove(prevWaypointComponent);
+    remove(prevEditFormComponent);
+  }
+
+  destroy() {
+    remove(this.#waypointComponent);
+    remove(this.#waypointEditFormComponent);
   }
 
   #replaceWaypontToForm() {
