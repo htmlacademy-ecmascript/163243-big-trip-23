@@ -1,4 +1,4 @@
-import { TRIP_TYPES } from '../const.js';
+import { TripTypes } from '../const.js';
 import { humanizeDate, convertToKebabCase } from '../utils.js';
 import AbstractView from '../framework/view/abstract-view.js';
 
@@ -49,7 +49,7 @@ const createEditPointItemTemplate = (point, destinations, offers) => {
         <div class="event__type-list">
           <fieldset class="event__type-group">
             <legend class="visually-hidden">Event type</legend>
-            ${TRIP_TYPES.map((type) => createEventTypeItemTemplate(type)).join('')}
+            ${TripTypes.map((type) => createEventTypeItemTemplate(type)).join('')}
           </fieldset>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import AbstractView from '../framework/view/abstract-view.js';
 
-const SORT_TYPES = ['day', 'event', 'time', 'price', 'offer'];
+const SortTypes = ['day', 'event', 'time', 'price', 'offer'];
 
 const createSortViewItemTemplate = (type) =>
   `
@@ -13,7 +13,7 @@ const createSortViewItemTemplate = (type) =>
 const createSortViewTemplate = () =>
   `
     <form class="trip-events__trip-sort  trip-sort" action="#" method="get">
-      ${SORT_TYPES.map((type) => createSortViewItemTemplate(type)).join('')}
+      ${SortTypes.map((type) => createSortViewItemTemplate(type)).join('')}
     </form>
   `;
 
