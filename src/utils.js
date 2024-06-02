@@ -23,9 +23,9 @@ const Sorting = {
   byTime: (waypointA, waypointB) => {
     const durationA = dayjs(waypointA.dateTo).diff(dayjs(waypointA.dateFrom));
     const durationB = dayjs(waypointB.dateTo).diff(dayjs(waypointB.dateFrom));
-    return durationA - durationB;
+    return durationB - durationA;
   },
-  byPrice: (waypointA, waypointB) => waypointA.basePrice - waypointB.basePrice,
+  byPrice: (waypointA, waypointB) => waypointB.basePrice - waypointA.basePrice,
 };
 
 export { getRandomArrayElement, getRandomNumber, humanizeDate, convertToKebabCase, updateItem, Sorting };
