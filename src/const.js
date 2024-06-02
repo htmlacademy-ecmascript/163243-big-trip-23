@@ -8,4 +8,10 @@ const TripTypes = [
   'check-in',
 ];
 
-export { TripTypes };
+const SortTypes = {
+  DAY: 'day',
+  TIME: 'time',
+  PRICE: 'price',
+};
+
+export { TripTypes, SortTypes };
