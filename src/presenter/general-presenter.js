@@ -10,6 +10,7 @@ import { updateItem } from '../utils.js';
 
 export default class GeneralPresenter {
   #eventsListComponent = new EventsListView;
+  #sortComponent = null;
   #tripMain;
   #tripFilters;
   #tripEvents;
@@ -34,8 +35,18 @@ export default class GeneralPresenter {
     render(new FilterView(), this.#tripFilters);
   }
 
-  #renderSorting() {
-    render(new SortView(), this.#tripEvents);
+  #handleSortTypeChange = (sortType) => {
+    // - Сортируем задачи
+    // - Очищаем список
+    // - Рендерим список заново
+  };
+
+  #renderSort() {
+    this.#sortComponent = new SortView({
+      onSortTypeChange: this.#handleSortTypeChange
+    });
+
+    render(this.#sortComponent, this.#tripEvents);
   }
 
   #renderTripEvents() {
@@ -73,7 +84,7 @@ export default class GeneralPresenter {
     this.#tripWaypoints = [...this.#pointModel.points];
     this.#renderTripInfo();
     this.#renderFilters();
-    this.#renderSorting();
+    this.#renderSort();
     this.#renderTripEvents(destinations, offers);
     this.#tripWaypoints.forEach((point) => {
       this.#renderWaypoint(point, destinations, offers);
