@@ -18,4 +18,14 @@ const convertToKebabCase = (string) =>
 
 const updateItem = (items, update) => items.map((item) => item.id === update.id ? update : item);
 
-export { getRandomArrayElement, getRandomNumber, humanizeDate, convertToKebabCase, updateItem };
+const Sorting = {
+  byDay: (waypointA, waypointB) => dayjs(waypointA.dateFrom).diff(dayjs(waypointB.dateFrom)),
+  byTime: (waypointA, waypointB) => {
+    const durationA = dayjs(waypointA.dateTo).diff(dayjs(waypointA.dateFrom));
+    const durationB = dayjs(waypointB.dateTo).diff(dayjs(waypointB.dateFrom));
+    return durationA - durationB;
+  },
+  byPrice: (waypointA, waypointB) => waypointA.basePrice - waypointB.basePrice,
+};
+
+export { getRandomArrayElement, getRandomNumber, humanizeDate, convertToKebabCase, updateItem, Sorting };

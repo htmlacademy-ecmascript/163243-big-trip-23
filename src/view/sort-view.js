@@ -36,7 +36,7 @@ export default class SortView extends AbstractView{
       return;
     }
 
-    evt.preventDefault();
+    // evt.preventDefault();
     this.#handleSortTypeChange(evt.target.value);
   };
 }
