@@ -16,4 +16,6 @@ const convertToKebabCase = (string) =>
     .join('-') // And finally kebab-case things up
     .toLowerCase(); // With a nice lower case
 
-export { getRandomArrayElement, getRandomNumber, humanizeDate, convertToKebabCase };
+const updateItem = (items, update) => items.map((item) => item.id === update.id ? update : item);
+
+export { getRandomArrayElement, getRandomNumber, humanizeDate, convertToKebabCase, updateItem };
