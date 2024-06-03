@@ -122,16 +122,20 @@ export default class EditPointFormView extends AbstractStatefulView {
     this.#allDestinations = destinations;
     this._setState(EditPointFormView.parseWaypointToState(this.#waypoint, this.#offersByType, destinations));
 
-    this.element.querySelector('.event__rollup-btn')
-      .addEventListener('click', this.#collapseClickHandler);
-
-    this.element.querySelector('form')
-      .addEventListener('submit', this.#formSubmitHandler);
+    this._restoreHandlers();
 
   }
 
   get template() {
     return createEditPointItemTemplate(this._state, this.#currentDestination, this.#offersByType, this.#allDestinations, this.#checkedOffers);
+  }
+
+  _restoreHandlers() {
+    this.element.querySelector('.event__rollup-btn')
+      .addEventListener('click', this.#collapseClickHandler);
+
+    this.element.querySelector('form')
+      .addEventListener('submit', this.#formSubmitHandler);
   }
 
   #collapseClickHandler = (evt) => {
