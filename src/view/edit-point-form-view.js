@@ -1,13 +1,16 @@
 import { TripTypes } from '../const.js';
 import { humanizeDate, convertToKebabCase } from '../utils.js';
-import AbstractView from '../framework/view/abstract-view.js';
+import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 
 const DATE_FORMAT = 'DD/MM/YY h:mm';
 
-const createOfferItemTemplate = (offer) =>
+const getCurrentDestination = (destinations, point) => destinations.find((destination) => destination.id === point.destination);
+const getOffersByType = (offers, point) => offers.find((offer) => offer.type === point.type);
+
+const createOfferItemTemplate = (offer, checkedOffers) =>
   `
   <div class="event__offer-selector">
-    <input class="event__offer-checkbox  visually-hidden" id="event-offer-${convertToKebabCase(offer.title)}-1" type="checkbox" name="event-offer-${convertToKebabCase(offer.title)}" checked>
+    <input class="event__offer-checkbox  visually-hidden" id="event-offer-${convertToKebabCase(offer.title)}-1" type="checkbox" name="event-offer-${convertToKebabCase(offer.title)}" ${checkedOffers.includes(offer.id) ? 'checked' : ''}>
       <label class="event__offer-label" for="event-offer-${convertToKebabCase(offer.title)}-1">
         <span class="event__offer-title">${offer.title}</span>
           &plus;&euro;&nbsp;
@@ -29,14 +32,8 @@ const cretateOptionsTemplate = (destination, currentDestination) =>
   <option ${destination.name === currentDestination.name ? 'selected' : ''} value="${destination.name}">${destination.name}</option>
   `;
 
-const createEditPointItemTemplate = (point, destinations, offers) => {
-  const currentDestination = destinations.find((destination) => destination.id === point.destination);
-  const offersByType = offers.find((offer) => offer.type === point.type);
-  let currentOffers = [];
-  if (offersByType) {
-    currentOffers = offersByType.offers.filter((offer) => point.offers.includes(offer.id));
-  }
-  return `
+const createEditPointItemTemplate = (point, currentDestination, offersByType, allDestinations, checkedOffers) =>
+  `
   <li class="trip-events__item">
   <form class="event event--edit" action="#" method="post">
     <header class="event__header">
@@ -59,7 +56,7 @@ const createEditPointItemTemplate = (point, destinations, offers) => {
         </label>
         <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" list="destination-list-1" value="${currentDestination.name}">
         <datalist id="destination-list-1">
-          ${destinations.map((destination) => cretateOptionsTemplate(destination, currentDestination)).join('')}
+          ${allDestinations.map((destination) => cretateOptionsTemplate(destination, currentDestination)).join('')}
         </datalist>
       </div>
       <div class="event__field-group  event__field-group--time">
@@ -83,35 +80,47 @@ const createEditPointItemTemplate = (point, destinations, offers) => {
       </button>
     </header>
     <section class="event__details">
+      ${ point.hasOffers ? `
       <section class="event__section  event__section--offers">
-        <h3 class="event__section-title  event__section-title--offers">Offers</h3>
-        <div class="event__available-offers">
-        ${currentOffers.map((offer) => createOfferItemTemplate(offer)).join('')}
-      </section>
-      <section class="event__section  event__section--destination">
-        <h3 class="event__section-title  event__section-title--destination">Destination</h3>
-        <p class="event__destination-description">${currentDestination.description}</p>
-      </section>
+      <h3 class="event__section-title  event__section-title--offers">Offers</h3>
+      <div class="event__available-offers">
+      ${offersByType.map((offer) => createOfferItemTemplate(offer, checkedOffers)).join('')}
     </section>
+    `
+    : ''}
+    ${ point.hasDestination ? `
+    <section class="event__section  event__section--destination">
+      <h3 class="event__section-title  event__section-title--destination">Destination</h3>
+      <p class="event__destination-description">${currentDestination.description}</p>
+    </section>
+  </section>
+  ` : ''}
   </form>
   </li>
   `;
-};
 
-export default class EditPointFormView extends AbstractView {
-  #point = null;
-  #destinations = null;
-  #offers = null;
+
+export default class EditPointFormView extends AbstractStatefulView {
+  #waypoint = null;
+  #allOffers = null;
+  #checkedOffers = null;
   #handleCollapseClick = null;
   #handleFormSubmit = null;
+  #allDestinations = null;
+  #currentDestination = null;
+  #offersByType = null;
 
   constructor({point, destinations, offers, onCollapseClick, onSubmitForm}) {
     super();
-    this.#point = point;
-    this.#destinations = destinations;
-    this.#offers = offers;
+    this.#waypoint = point;
+    this.#currentDestination = getCurrentDestination(destinations, this.#waypoint);
+    this.#allOffers = offers;
+    this.#checkedOffers = point.offers;
+    this.#offersByType = getOffersByType(offers, point) ? getOffersByType(offers, point).offers : '';
     this.#handleCollapseClick = onCollapseClick;
     this.#handleFormSubmit = onSubmitForm;
+    this.#allDestinations = destinations;
+    this._setState(EditPointFormView.parseWaypointToState(this.#waypoint, this.#offersByType, destinations));
 
     this.element.querySelector('.event__rollup-btn')
       .addEventListener('click', this.#collapseClickHandler);
@@ -122,7 +131,7 @@ export default class EditPointFormView extends AbstractView {
   }
 
   get template() {
-    return createEditPointItemTemplate(this.#point, this.#destinations, this.#offers);
+    return createEditPointItemTemplate(this._state, this.#currentDestination, this.#offersByType, this.#allDestinations, this.#checkedOffers);
   }
 
   #collapseClickHandler = (evt) => {
@@ -132,6 +141,22 @@ export default class EditPointFormView extends AbstractView {
 
   #formSubmitHandler = (evt) => {
     evt.preventDefault();
-    this.#handleFormSubmit(this.#point);
+    this.#handleFormSubmit(EditPointFormView.parseStateToWaypoint(this._state));
   };
+
+  static parseWaypointToState(waypoint, offersByType, destinations) {
+    const destinationDescription = getCurrentDestination(destinations, waypoint).description;
+    return {...waypoint,
+      hasOffers: offersByType.length,
+      hasDestination: destinationDescription,
+    };
+  }
+
+  static parseStateToWaypoint(state) {
+    const waypoint = {...state};
+
+    delete waypoint.hasOffers;
+    delete waypoint.hasDestination;
+    return waypoint;
+  }
 }
