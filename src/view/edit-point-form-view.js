@@ -5,6 +5,9 @@ import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 const DATE_FORMAT = 'DD/MM/YY h:mm';
 
 const getCurrentDestination = (destinations, point) => destinations.find((destination) => destination.id === point.destination);
+
+const getDestinationIdByName = (destinations, destinationName) => destinations.find((destination) => destination.name === destinationName).name;
+
 const getOffersByType = (offers, point) => offers.find((offer) => offer.type === point.type);
 
 const createOfferItemTemplate = (offer, checkedOffers) =>
@@ -27,9 +30,9 @@ const createEventTypeItemTemplate = (type) =>
     </div>
   `;
 
-const cretateOptionsTemplate = (destination, currentDestination) =>
+const createOptionsTemplate = (destination, currentDestination) =>
   `
-  <option ${destination.name === currentDestination.name ? 'selected' : ''} value="${destination.name}">${destination.name}</option>
+  <option ${destination === currentDestination.name ? 'selected' : ''} value="${destination}">${destination}</option>
   `;
 
 const createEditPointItemTemplate = (point, currentDestination, offersByType, allDestinations, checkedOffers) =>
@@ -54,9 +57,9 @@ const createEditPointItemTemplate = (point, currentDestination, offersByType, al
         <label class="event__label  event__type-output" for="event-destination-1">
           ${point.type}
         </label>
-        <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" list="destination-list-1" value="${currentDestination.name}">
+        <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" list="destination-list-1">
         <datalist id="destination-list-1">
-          ${allDestinations.map((destination) => cretateOptionsTemplate(destination, currentDestination)).join('')}
+          ${allDestinations.map((destination) => createOptionsTemplate(destination, currentDestination)).join('')}
         </datalist>
       </div>
       <div class="event__field-group  event__field-group--time">
@@ -104,11 +107,14 @@ export default class EditPointFormView extends AbstractStatefulView {
   #waypoint = null;
   #allOffers = null;
   #checkedOffers = null;
-  #handleCollapseClick = null;
-  #handleFormSubmit = null;
   #allDestinations = null;
+  #allDestinationsNames = null;
   #currentDestination = null;
   #offersByType = null;
+
+  #handleCollapseClick = null;
+  #handleFormSubmit = null;
+
 
   constructor({point, destinations, offers, onCollapseClick, onSubmitForm}) {
     super();
@@ -120,6 +126,7 @@ export default class EditPointFormView extends AbstractStatefulView {
     this.#handleCollapseClick = onCollapseClick;
     this.#handleFormSubmit = onSubmitForm;
     this.#allDestinations = destinations;
+    this.#allDestinationsNames = [...new Set(destinations.map((destination) => destination.name))];
     this._setState(EditPointFormView.parseWaypointToState(this.#waypoint, this.#offersByType, destinations));
 
     this._restoreHandlers();
@@ -127,7 +134,7 @@ export default class EditPointFormView extends AbstractStatefulView {
   }
 
   get template() {
-    return createEditPointItemTemplate(this._state, this.#currentDestination, this.#offersByType, this.#allDestinations, this.#checkedOffers);
+    return createEditPointItemTemplate(this._state, this.#currentDestination, this.#offersByType, this.#allDestinationsNames, this.#checkedOffers);
   }
 
   _restoreHandlers() {
@@ -136,6 +143,15 @@ export default class EditPointFormView extends AbstractStatefulView {
 
     this.element.querySelector('form')
       .addEventListener('submit', this.#formSubmitHandler);
+
+    this.element.querySelector('.event__type-list')
+      .addEventListener('click', this.#eventTypeClickHandler);
+
+    this.element.querySelector('.event__input--price')
+      .addEventListener('input', this.#priceInputHandler);
+
+    this.element.querySelector('.event__input--destination')
+      .addEventListener('input', this.#destinationInputHandler);
   }
 
   #collapseClickHandler = (evt) => {
@@ -146,6 +162,28 @@ export default class EditPointFormView extends AbstractStatefulView {
   #formSubmitHandler = (evt) => {
     evt.preventDefault();
     this.#handleFormSubmit(EditPointFormView.parseStateToWaypoint(this._state));
+  };
+
+  #eventTypeClickHandler = (evt) => {
+    evt.preventDefault();
+    this.updateElement({
+      type: evt.target.textContent,
+    });
+  };
+
+  #priceInputHandler = (evt) => {
+    evt.preventDefault();
+    this._setState({
+      basePrice: evt.target.value,
+    });
+  };
+
+  #destinationInputHandler = (evt) => {
+    evt.preventDefault();
+    const id = getDestinationIdByName(this.#allDestinations, evt.target.value);
+    this._setState({
+      destination: id,
+    });
   };
 
   static parseWaypointToState(waypoint, offersByType, destinations) {

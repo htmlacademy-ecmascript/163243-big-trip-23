@@ -2,6 +2,8 @@ import dayjs from 'dayjs';
 
 const getRandomArrayElement = (items) => items[Math.floor(Math.random() * items.length)];
 
+const getUniqueArrayElements = (items) => Array.from(new Set(items));
+
 const getRandomNumber = (maxValue = 1) => Math.floor(Math.random() * maxValue);
 
 const humanizeDate = (date, format) => date ? dayjs(date).format(format) : '';
@@ -28,4 +30,12 @@ const Sorting = {
   byPrice: (waypointA, waypointB) => waypointB.basePrice - waypointA.basePrice,
 };
 
-export { getRandomArrayElement, getRandomNumber, humanizeDate, convertToKebabCase, updateItem, Sorting };
+export {
+  getRandomArrayElement,
+  getRandomNumber,
+  humanizeDate,
+  convertToKebabCase,
+  updateItem,
+  Sorting,
+  getUniqueArrayElements
+};
