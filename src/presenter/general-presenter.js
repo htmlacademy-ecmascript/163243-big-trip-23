@@ -7,8 +7,6 @@ import WaypointPresenter from './waypoint-presenter.js';
 import { updateItem, Sorting } from '../utils.js';
 import { SortTypes } from '../const.js';
 
-// const WAYPOINTS_COUNT = 3;
-
 export default class GeneralPresenter {
   #eventsListComponent = new EventsListView;
   #sortComponent = null;
@@ -85,13 +83,13 @@ export default class GeneralPresenter {
   #sortTasks(sortType) {
     switch (sortType) {
       case SortTypes.TIME:
-        this.#tripWaypoints.sort(Sorting.byTime);
+        this.#tripWaypoints.sort(Sorting.TIME);
         break;
       case SortTypes.PRICE:
-        this.#tripWaypoints.sort(Sorting.byPrice);
+        this.#tripWaypoints.sort(Sorting.PRICE);
         break;
       default:
-        this.#tripWaypoints.sort(Sorting.byDay);
+        this.#tripWaypoints.sort(Sorting.DAY);
     }
 
     this.#currentSortType = sortType;

@@ -1,5 +1,5 @@
 import { TripTypes } from '../const.js';
-import { humanizeDate, convertToKebabCase } from '../utils.js';
+import { humanizeDate, convertToKebabCase, getArrayFromObjectColumn } from '../utils.js';
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 
 const DATE_FORMAT = 'DD/MM/YY h:mm';
@@ -8,7 +8,10 @@ const getCurrentDestination = (destinations, point) => destinations.find((destin
 
 const getDestinationIdByName = (destinations, destinationName) => destinations.find((destination) => destination.name === destinationName).name;
 
-const getOffersByType = (offers, point) => offers.find((offer) => offer.type === point.type);
+const getOffersByType = (offers, type) => {
+  const offersByType = offers.find((offer) => offer.type === type);
+  return offersByType ? offersByType.offers : '';
+};
 
 const createOfferItemTemplate = (offer, checkedOffers) =>
   `
@@ -32,11 +35,16 @@ const createEventTypeItemTemplate = (type) =>
 
 const createOptionsTemplate = (destination, currentDestination) =>
   `
-  <option ${destination === currentDestination.name ? 'selected' : ''} value="${destination}">${destination}</option>
+  <option ${destination === currentDestination.name ? 'selected' : ''}>${destination}</option>
   `;
 
-const createEditPointItemTemplate = (point, currentDestination, offersByType, allDestinations, checkedOffers) =>
-  `
+const createEditPointItemTemplate = (point, destinations, offers) => {
+  const currentDestination = getCurrentDestination(destinations, point);
+  const checkedOffersIds = point.offers;
+  const offersByType = getOffersByType(offers, point.type);
+  const allDestinationsNames = [...new Set(destinations.map((destination) => destination.name))];
+
+  return `
   <li class="trip-events__item">
   <form class="event event--edit" action="#" method="post">
     <header class="event__header">
@@ -59,7 +67,7 @@ const createEditPointItemTemplate = (point, currentDestination, offersByType, al
         </label>
         <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" list="destination-list-1">
         <datalist id="destination-list-1">
-          ${allDestinations.map((destination) => createOptionsTemplate(destination, currentDestination)).join('')}
+          ${allDestinationsNames.map((destination) => createOptionsTemplate(destination, currentDestination)).join('')}
         </datalist>
       </div>
       <div class="event__field-group  event__field-group--time">
@@ -87,7 +95,7 @@ const createEditPointItemTemplate = (point, currentDestination, offersByType, al
       <section class="event__section  event__section--offers">
       <h3 class="event__section-title  event__section-title--offers">Offers</h3>
       <div class="event__available-offers">
-      ${offersByType.map((offer) => createOfferItemTemplate(offer, checkedOffers)).join('')}
+        ${offersByType.map((offer) => createOfferItemTemplate(offer, checkedOffersIds)).join('')}
     </section>
     `
     : ''}
@@ -101,16 +109,13 @@ const createEditPointItemTemplate = (point, currentDestination, offersByType, al
   </form>
   </li>
   `;
+};
 
 
 export default class EditPointFormView extends AbstractStatefulView {
   #waypoint = null;
   #allOffers = null;
-  #checkedOffers = null;
   #allDestinations = null;
-  #allDestinationsNames = null;
-  #currentDestination = null;
-  #offersByType = null;
 
   #handleCollapseClick = null;
   #handleFormSubmit = null;
@@ -119,29 +124,38 @@ export default class EditPointFormView extends AbstractStatefulView {
   constructor({point, destinations, offers, onCollapseClick, onSubmitForm}) {
     super();
     this.#waypoint = point;
-    this.#currentDestination = getCurrentDestination(destinations, this.#waypoint);
+    this.#allDestinations = destinations;
     this.#allOffers = offers;
-    this.#checkedOffers = point.offers;
-    this.#offersByType = getOffersByType(offers, point) ? getOffersByType(offers, point).offers : '';
     this.#handleCollapseClick = onCollapseClick;
     this.#handleFormSubmit = onSubmitForm;
-    this.#allDestinations = destinations;
-    this.#allDestinationsNames = [...new Set(destinations.map((destination) => destination.name))];
-    this._setState(EditPointFormView.parseWaypointToState(this.#waypoint, this.#offersByType, destinations));
+
+
+    this._setState(EditPointFormView.parseWaypointToState(
+      this.#waypoint,
+      this.#allDestinations,
+      this.#allOffers,
+    ));
 
     this._restoreHandlers();
-
   }
 
   get template() {
-    return createEditPointItemTemplate(this._state, this.#currentDestination, this.#offersByType, this.#allDestinationsNames, this.#checkedOffers);
-  }
-
-  reset(waypoint) {
-    this.updateElement(
-      EditPointFormView.parseWaypointToState(waypoint),
+    return createEditPointItemTemplate(
+      this._state,
+      this.#allDestinations,
+      this.#allOffers
     );
   }
+
+  reset = (waypoint) => {
+    this.updateElement(
+      EditPointFormView.parseWaypointToState({
+        waypoint,
+        destinations: this.#allDestinations,
+        offers: this.#allOffers,
+      }),
+    );
+  };
 
   _restoreHandlers() {
     this.element.querySelector('.event__rollup-btn')
@@ -151,7 +165,7 @@ export default class EditPointFormView extends AbstractStatefulView {
       .addEventListener('submit', this.#formSubmitHandler);
 
     this.element.querySelector('.event__type-list')
-      .addEventListener('click', this.#eventTypeClickHandler);
+      .addEventListener('change', this.#eventTypeClickHandler);
 
     this.element.querySelector('.event__input--price')
       .addEventListener('input', this.#priceInputHandler);
@@ -172,8 +186,13 @@ export default class EditPointFormView extends AbstractStatefulView {
 
   #eventTypeClickHandler = (evt) => {
     evt.preventDefault();
+    if (!evt.target.closest('.event__type-input')) {
+      return;
+    }
+
     this.updateElement({
-      type: evt.target.textContent,
+      type: evt.target.value,
+      hasOffers: getOffersByType(this.#allOffers, evt.target.value).length,
     });
   };
 
@@ -192,8 +211,10 @@ export default class EditPointFormView extends AbstractStatefulView {
     });
   };
 
-  static parseWaypointToState(waypoint, offersByType, destinations) {
+  static parseWaypointToState(waypoint, destinations, offers) {
     const destinationDescription = getCurrentDestination(destinations, waypoint).description;
+    const offersByType = getOffersByType(offers, waypoint.type);
+
     return {...waypoint,
       hasOffers: offersByType.length,
       hasDestination: destinationDescription,

@@ -4,6 +4,8 @@ const getRandomArrayElement = (items) => items[Math.floor(Math.random() * items.
 
 const getUniqueArrayElements = (items) => Array.from(new Set(items));
 
+const getArrayFromObjectColumn = (initObject, column) => initObject ? initObject.map((elem) => elem[column]) : '';
+
 const getRandomNumber = (maxValue = 1) => Math.floor(Math.random() * maxValue);
 
 const humanizeDate = (date, format) => date ? dayjs(date).format(format) : '';
@@ -21,13 +23,13 @@ const convertToKebabCase = (string) =>
 const updateItem = (items, update) => items.map((item) => item.id === update.id ? update : item);
 
 const Sorting = {
-  byDay: (waypointA, waypointB) => dayjs(waypointA.dateFrom).diff(dayjs(waypointB.dateFrom)),
-  byTime: (waypointA, waypointB) => {
+  DAY: (waypointA, waypointB) => dayjs(waypointA.dateFrom).diff(dayjs(waypointB.dateFrom)),
+  TIME: (waypointA, waypointB) => {
     const durationA = dayjs(waypointA.dateTo).diff(dayjs(waypointA.dateFrom));
     const durationB = dayjs(waypointB.dateTo).diff(dayjs(waypointB.dateFrom));
     return durationB - durationA;
   },
-  byPrice: (waypointA, waypointB) => waypointB.basePrice - waypointA.basePrice,
+  PRICE: (waypointA, waypointB) => waypointB.basePrice - waypointA.basePrice,
 };
 
 export {
@@ -37,5 +39,6 @@ export {
   convertToKebabCase,
   updateItem,
   Sorting,
-  getUniqueArrayElements
+  getUniqueArrayElements,
+  getArrayFromObjectColumn
 };
