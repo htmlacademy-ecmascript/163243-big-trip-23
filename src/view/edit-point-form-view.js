@@ -4,11 +4,14 @@ import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 
 const DATE_FORMAT = 'DD/MM/YY h:mm';
 
-const getCurrentDestination = (destinations, point) => destinations.find((destination) => destination.id === point.destination);
+const getCurrentDestination = (destinations, point) => destinations ? destinations.find((destination) => destination.id === point.destination) : '';
 
-const getDestinationIdByName = (destinations, destinationName) => destinations.find((destination) => destination.name === destinationName).name;
+const getDestinationIdByName = (destinations, destinationName) => destinations ? destinations.find((destination) => destination.name === destinationName).name : '';
 
 const getOffersByType = (offers, type) => {
+  if(!offers) {
+    return '';
+  }
   const offersByType = offers.find((offer) => offer.type === type);
   return offersByType ? offersByType.offers : '';
 };
@@ -38,7 +41,7 @@ const createOptionsTemplate = (destination, currentDestination) =>
   <option ${destination === currentDestination.name ? 'selected' : ''}>${destination}</option>
   `;
 
-const createEditPointItemTemplate = (point, destinations, offers) => {
+const createEditPointItemTemplate = ({point, destinations, offers}) => {
   const currentDestination = getCurrentDestination(destinations, point);
   const checkedOffersIds = point.offers;
   const offersByType = getOffersByType(offers, point.type);
@@ -65,7 +68,7 @@ const createEditPointItemTemplate = (point, destinations, offers) => {
         <label class="event__label  event__type-output" for="event-destination-1">
           ${point.type}
         </label>
-        <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" list="destination-list-1">
+        <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" list="destination-list-1" value="${currentDestination.name}">
         <datalist id="destination-list-1">
           ${allDestinationsNames.map((destination) => createOptionsTemplate(destination, currentDestination)).join('')}
         </datalist>
@@ -140,11 +143,11 @@ export default class EditPointFormView extends AbstractStatefulView {
   }
 
   get template() {
-    return createEditPointItemTemplate(
-      this._state,
-      this.#allDestinations,
-      this.#allOffers
-    );
+    return createEditPointItemTemplate({
+      point: this._state,
+      destinations: this.#allDestinations,
+      offers: this.#allOffers
+    });
   }
 
   reset = (waypoint) => {
@@ -212,6 +215,7 @@ export default class EditPointFormView extends AbstractStatefulView {
   };
 
   static parseWaypointToState(waypoint, destinations, offers) {
+    console.log('destinations', destinations);
     const destinationDescription = getCurrentDestination(destinations, waypoint).description;
     const offersByType = getOffersByType(offers, waypoint.type);
 
