@@ -206,7 +206,6 @@ export default class EditPointFormView extends AbstractStatefulView {
       });
     }
 
-
     this.#handleFormSubmit(EditPointFormView.parseStateToWaypoint(this._state));
   };
 
@@ -233,9 +232,11 @@ export default class EditPointFormView extends AbstractStatefulView {
   #destinationInputHandler = (evt) => {
     evt.preventDefault();
     const id = getDestinationIdByName(this.#allDestinations, evt.target.value);
-    this._setState({
-      destination: id,
-    });
+    if(id) {
+      this.updateElement({
+        destination: id,
+      });
+    }
   };
 
   static parseWaypointToState(waypoint, destinations, offers) {
