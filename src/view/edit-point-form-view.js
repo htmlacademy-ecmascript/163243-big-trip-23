@@ -199,10 +199,10 @@ export default class EditPointFormView extends AbstractStatefulView {
     evt.preventDefault();
     const checkedOffers = this.element.querySelectorAll('.event__section--offers :checked');
     if (checkedOffers) {
-      const checkedOffersIds = [...checkedOffers].map((offer) => offer.id);
-      const normalizedOfferNames = checkedOffersIds.map((offer) => getOfferIdByName(this.#allOffers, offer));
+      const checkedOffersKebabNames = [...checkedOffers].map((offer) => offer.id);
+      const checkedOffersIds = checkedOffersKebabNames.map((offer) => getOfferIdByName(this.#allOffers, offer));
       this._setState({
-        offers: normalizedOfferNames,
+        offers: checkedOffersIds,
       });
     }
 
