@@ -219,6 +219,7 @@ export default class EditPointFormView extends AbstractStatefulView {
     this.updateElement({
       type: evt.target.value,
       hasOffers: getOffersByType(this.#allOffers, evt.target.value).length,
+      offers: '',
     });
   };
 
