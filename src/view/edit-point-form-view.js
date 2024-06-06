@@ -18,7 +18,7 @@ const getOfferIdByName = (allOffers, chekedId) => {
   const offerId = offersWithId.offers.find((offer) => convertToKebabCase(offer.title) === kebabOfferName).id;
   return offerId;
 };
-//convertToKebabCase === kebabOfferName
+
 
 const getOffersByType = (offers, type) => {
   if(!offers) {
