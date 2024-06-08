@@ -4,19 +4,20 @@ import SortView from '../view/sort-view.js';
 import EventsListView from '../view/events-list-view.js';
 import { render } from '../framework/render.js';
 import WaypointPresenter from './waypoint-presenter.js';
-import { updateItem } from '../utils.js';
-
-// const WAYPOINTS_COUNT = 3;
+import { updateItem, Sorting } from '../utils.js';
+import { SortTypes } from '../const.js';
 
 export default class GeneralPresenter {
   #eventsListComponent = new EventsListView;
+  #sortComponent = null;
   #tripMain;
   #tripFilters;
   #tripEvents;
   #pointModel;
   #tripWaypoints = [];
+  #sourcedTripWaypoints = [];
   #waypointPresenters = new Map();
-
+  #currentSortType = SortTypes.DAY;
 
   constructor(pointModel) {
     this.#tripMain = document.querySelector('.trip-main');
@@ -24,7 +25,6 @@ export default class GeneralPresenter {
     this.#tripEvents = document.querySelector('.trip-events');
     this.#pointModel = pointModel;
   }
-
 
   #renderTripInfo() {
     render(new TripInfoView(), this.#tripMain, 'afterbegin');
@@ -34,8 +34,21 @@ export default class GeneralPresenter {
     render(new FilterView(), this.#tripFilters);
   }
 
-  #renderSorting() {
-    render(new SortView(), this.#tripEvents);
+  #handleSortTypeChange = (sortType) => {
+    if (this.#currentSortType === sortType) {
+      return;
+    }
+    this.#sortTasks(sortType.split('-')[1]);
+    this.#clearWaypointsList();
+    this.#renderWaypointsList();
+  };
+
+  #renderSort() {
+    this.#sortComponent = new SortView({
+      onSortTypeChange: this.#handleSortTypeChange
+    });
+
+    render(this.#sortComponent, this.#tripEvents);
   }
 
   #renderTripEvents() {
@@ -48,6 +61,7 @@ export default class GeneralPresenter {
 
   #handleTaskChange = (updatedWaypoint, destinations, offers) => {
     this.#tripWaypoints = updateItem(this.#tripWaypoints, updatedWaypoint);
+    this.#sourcedTripWaypoints = updateItem(this.#sourcedTripWaypoints, updatedWaypoint);
     this.#waypointPresenters.get(updatedWaypoint.id).init(updatedWaypoint, destinations, offers);
   };
 
@@ -61,9 +75,28 @@ export default class GeneralPresenter {
     this.#waypointPresenters.set(point.id, wayPointPresenter);
   }
 
-  #clearWaypointList() {
+  #clearWaypointsList() {
     this.#waypointPresenters.forEach((presenter) => presenter.destroy());
     this.#waypointPresenters.clear();
+  }
+
+  #sortTasks(sortType) {
+    switch (sortType) {
+      case SortTypes.TIME:
+        this.#tripWaypoints.sort(Sorting.TIME);
+        break;
+      case SortTypes.PRICE:
+        this.#tripWaypoints.sort(Sorting.PRICE);
+        break;
+      default:
+        this.#tripWaypoints.sort(Sorting.DAY);
+    }
+
+    this.#currentSortType = sortType;
+  }
+
+  #renderWaypointsList () {
+    this.#tripWaypoints.forEach((point) => this.#renderWaypoint(point, this.#pointModel.destinations, this.#pointModel.offers));
   }
 
 
@@ -71,13 +104,12 @@ export default class GeneralPresenter {
     const destinations = this.#pointModel.destinations;
     const offers = this.#pointModel.offers;
     this.#tripWaypoints = [...this.#pointModel.points];
+    this.#sourcedTripWaypoints = [...this.#pointModel.points];
     this.#renderTripInfo();
     this.#renderFilters();
-    this.#renderSorting();
+    this.#renderSort();
     this.#renderTripEvents(destinations, offers);
-    this.#tripWaypoints.forEach((point) => {
-      this.#renderWaypoint(point, destinations, offers);
-      // this.#renderEditForm(point, destinations, offers);
-    });
+    this.#sortTasks(this.#currentSortType);
+    this.#renderWaypointsList();
   }
 }

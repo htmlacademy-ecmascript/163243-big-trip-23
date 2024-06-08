@@ -54,8 +54,6 @@ export default class WaypointPresenter {
       return;
     }
 
-    // Проверка на наличие в DOM необходима,
-    // чтобы не пытаться заменить то, что не было отрисовано
     if (this.#mode === Mode.DEFAULT) {
       replace(this.#waypointComponent, prevWaypointComponent);
     }
@@ -75,6 +73,7 @@ export default class WaypointPresenter {
 
   resetView() {
     if (this.#mode !== Mode.DEFAULT) {
+      this.#waypointEditFormComponent.reset(this.#waypoint);
       this.#replaceFormToWaypoint();
     }
   }

@@ -1,4 +1,4 @@
-const TRIP_TYPES = [
+const TripTypes = [
   'taxi',
   'bus',
   'train',
@@ -8,4 +8,10 @@ const TRIP_TYPES = [
   'check-in',
 ];
 
-export { TRIP_TYPES };
+const SortTypes = {
+  DAY: 'day',
+  TIME: 'time',
+  PRICE: 'price',
+};
+
+export { TripTypes, SortTypes };

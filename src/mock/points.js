@@ -1,4 +1,4 @@
-import { TRIP_TYPES } from '../const.js';
+import { TripTypes } from '../const.js';
 import { getRandomArrayElement } from '../utils.js';
 import { nanoid } from 'nanoid';
 
@@ -16,7 +16,7 @@ const mockPoints =
       'b4c3e4e6-9053-42ce-b747-e281314baa32',
       'b4c3e4e6-9053-42ce-b747-e281314baa33'
     ],
-    'type': getRandomArrayElement(TRIP_TYPES)
+    'type': getRandomArrayElement(TripTypes)
   },
   {
     'id': nanoid(),
@@ -28,7 +28,7 @@ const mockPoints =
     'offers': [
       'b4c3e4e6-9053-42ce-b747-e281314baa31'
     ],
-    'type': getRandomArrayElement(TRIP_TYPES)
+    'type': getRandomArrayElement(TripTypes)
   },
   {
     'id': nanoid(),
@@ -40,7 +40,7 @@ const mockPoints =
     'offers': [
       'b4c3e4e6-9053-42ce-b747-e281314baa42'
     ],
-    'type': getRandomArrayElement(TRIP_TYPES)
+    'type': getRandomArrayElement(TripTypes)
   }
 ];
 
