@@ -4,7 +4,7 @@ import SortView from '../view/sort-view.js';
 import EventsListView from '../view/events-list-view.js';
 import { render } from '../framework/render.js';
 import WaypointPresenter from './waypoint-presenter.js';
-import { updateItem, Sorting } from '../utils.js';
+import { Sorting } from '../utils.js';
 import { SortTypes } from '../const.js';
 
 export default class GeneralPresenter {
@@ -14,8 +14,6 @@ export default class GeneralPresenter {
   #tripFilters;
   #tripEvents;
   #pointModel;
-  #tripWaypoints = [];
-  #sourcedTripWaypoints = [];
   #waypointPresenters = new Map();
   #currentSortType = SortTypes.DAY;
 
@@ -24,6 +22,18 @@ export default class GeneralPresenter {
     this.#tripFilters = document.querySelector('.trip-controls__filters');
     this.#tripEvents = document.querySelector('.trip-events');
     this.#pointModel = pointModel;
+  }
+
+  get waypoints() {
+    switch (this.#currentSortType) {
+      case SortTypes.DAY:
+        return [...this.#pointModel.points].sort(Sorting.DAY);
+      case SortTypes.TIME:
+        return [...this.#pointModel.points].sort(Sorting.TIME);
+      case SortTypes.PRICE:
+        return [...this.#pointModel.points].sort(Sorting.PRICE);
+    }
+    return this.#pointModel.points;
   }
 
   #renderTripInfo() {
@@ -38,7 +48,7 @@ export default class GeneralPresenter {
     if (this.#currentSortType === sortType) {
       return;
     }
-    this.#sortTasks(sortType.split('-')[1]);
+    this.#currentSortType = sortType.split('-')[1];
     this.#clearWaypointsList();
     this.#renderWaypointsList();
   };
@@ -59,20 +69,18 @@ export default class GeneralPresenter {
     this.#waypointPresenters.forEach((presenter) => presenter.resetView());
   };
 
-  #handleTaskChange = (updatedWaypoint, destinations, offers) => {
-    this.#tripWaypoints = updateItem(this.#tripWaypoints, updatedWaypoint);
-    this.#sourcedTripWaypoints = updateItem(this.#sourcedTripWaypoints, updatedWaypoint);
+  #handleWaypointChange = (updatedWaypoint, destinations, offers) => {
     this.#waypointPresenters.get(updatedWaypoint.id).init(updatedWaypoint, destinations, offers);
   };
 
   #renderWaypoint(point, destinations, offers) {
-    const wayPointPresenter = new WaypointPresenter({
+    const waypointPresenter = new WaypointPresenter({
       waypointListContainer: this.#eventsListComponent.element,
-      onDataChange: this.#handleTaskChange,
+      onDataChange: this.#handleWaypointChange,
       onModeChange: this.#handleModeChange
     });
-    wayPointPresenter.init(point, destinations, offers);
-    this.#waypointPresenters.set(point.id, wayPointPresenter);
+    waypointPresenter.init(point, destinations, offers);
+    this.#waypointPresenters.set(point.id, waypointPresenter);
   }
 
   #clearWaypointsList() {
@@ -80,36 +88,17 @@ export default class GeneralPresenter {
     this.#waypointPresenters.clear();
   }
 
-  #sortTasks(sortType) {
-    switch (sortType) {
-      case SortTypes.TIME:
-        this.#tripWaypoints.sort(Sorting.TIME);
-        break;
-      case SortTypes.PRICE:
-        this.#tripWaypoints.sort(Sorting.PRICE);
-        break;
-      default:
-        this.#tripWaypoints.sort(Sorting.DAY);
-    }
-
-    this.#currentSortType = sortType;
-  }
-
   #renderWaypointsList () {
-    this.#tripWaypoints.forEach((point) => this.#renderWaypoint(point, this.#pointModel.destinations, this.#pointModel.offers));
+    const waypoints = this.waypoints;
+    waypoints.forEach((point) => this.#renderWaypoint(point, this.#pointModel.destinations, this.#pointModel.offers));
   }
 
 
   init() {
-    const destinations = this.#pointModel.destinations;
-    const offers = this.#pointModel.offers;
-    this.#tripWaypoints = [...this.#pointModel.points];
-    this.#sourcedTripWaypoints = [...this.#pointModel.points];
     this.#renderTripInfo();
     this.#renderFilters();
     this.#renderSort();
-    this.#renderTripEvents(destinations, offers);
-    this.#sortTasks(this.#currentSortType);
+    this.#renderTripEvents();
     this.#renderWaypointsList();
   }
 }

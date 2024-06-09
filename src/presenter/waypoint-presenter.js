@@ -24,6 +24,10 @@ export default class WaypointPresenter {
     this.#handleModeChange = onModeChange;
   }
 
+  get tasks() {
+    return this.#waypoint.points;
+  }
+
   init(point, destinations, offers) {
     this.#waypoint = point;
     this.#destinations = destinations;
