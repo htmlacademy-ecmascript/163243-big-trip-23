@@ -2,7 +2,7 @@ import TripInfoView from '../view/trip-info-view.js';
 import FilterView from '../view/filter-view.js';
 import SortView from '../view/sort-view.js';
 import EventsListView from '../view/events-list-view.js';
-import { render } from '../framework/render.js';
+import { render, remove } from '../framework/render.js';
 import WaypointPresenter from './waypoint-presenter.js';
 import { Sorting } from '../utils.js';
 import { SortTypes, UpdateType, UserAction } from '../const.js';
@@ -10,6 +10,8 @@ import { SortTypes, UpdateType, UserAction } from '../const.js';
 export default class GeneralPresenter {
   #eventsListComponent = new EventsListView;
   #sortComponent = null;
+  #tripInfoComponent = new TripInfoView();
+  #filterComponent = new FilterView();
   #tripMain;
   #tripFilters;
   #tripEvents;
@@ -38,11 +40,11 @@ export default class GeneralPresenter {
   }
 
   #renderTripInfo() {
-    render(new TripInfoView(), this.#tripMain, 'afterbegin');
+    render(this.#tripInfoComponent, this.#tripMain, 'afterbegin');
   }
 
   #renderFilters() {
-    render(new FilterView(), this.#tripFilters);
+    render(this.#filterComponent, this.#tripFilters);
   }
 
   #handleSortTypeChange = (sortType) => {
@@ -50,12 +52,13 @@ export default class GeneralPresenter {
       return;
     }
     this.#currentSortType = sortType.split('-')[1];
-    this.#clearWaypointsList();
-    this.#renderWaypointsList();
+    this.#clearTripBoard();
+    this.#renderTripBoard();
   };
 
   #renderSort() {
     this.#sortComponent = new SortView({
+      currentSortType: this.#currentSortType,
       onSortTypeChange: this.#handleSortTypeChange
     });
 
@@ -89,14 +92,15 @@ export default class GeneralPresenter {
     console.log(updateType, data);
     switch (updateType) {
       case UpdateType.PATCH:
-        // - обновить часть списка (например, когда поменялось описание)
         this.#waypointPresenters.get(data.id).init(data);
         break;
       case UpdateType.MINOR:
-        // - обновить список (например, когда задача ушла в архив)
+        this.#clearTripBoard();
+        this.#renderTripBoard();
         break;
       case UpdateType.MAJOR:
-        // - обновить всю доску (например, при переключении фильтра)
+        this.#clearTripBoard({resetSortType: true});
+        this.#renderTripBoard();
         break;
     }
   };
@@ -111,22 +115,42 @@ export default class GeneralPresenter {
     this.#waypointPresenters.set(point.id, waypointPresenter);
   }
 
-  #clearWaypointsList() {
+
+  #clearTripBoard({resetSortType = false} = {}) {
     this.#waypointPresenters.forEach((presenter) => presenter.destroy());
     this.#waypointPresenters.clear();
+
+    remove(this.#eventsListComponent);
+
+    remove(this.#sortComponent);
+    remove(this.#tripInfoComponent);
+    remove(this.#filterComponent);
+    // remove(this.#noWaypointsComponent);
+
+    if (resetSortType) {
+      this.#currentSortType = SortTypes.DAY;
+    }
   }
 
-  #renderWaypointsList () {
+  #renderTripBoard() {
     const waypoints = this.waypoints;
+    const waypointsCount = waypoints.length;
+
+    if (waypointsCount === 0) {
+      // this.#renderNoWaypoints();
+      return;
+    }
+
+    this.#renderTripInfo();
+    this.#renderFilters();
+    this.#renderSort();
+
+    this.#renderTripEvents();
     waypoints.forEach((point) => this.#renderWaypoint(point, this.#pointModel.destinations, this.#pointModel.offers));
   }
 
 
   init() {
-    this.#renderTripInfo();
-    this.#renderFilters();
-    this.#renderSort();
-    this.#renderTripEvents();
-    this.#renderWaypointsList();
+    this.#renderTripBoard();
   }
 }
