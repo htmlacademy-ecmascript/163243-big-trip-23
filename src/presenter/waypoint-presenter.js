@@ -1,6 +1,7 @@
 import EditPointFormView from '../view/edit-point-form-view.js';
 import WaypointView from '../view/waypoint-view.js';
 import { render, replace, remove } from '../framework/render.js';
+import {UserAction, UpdateType} from '../const.js';
 
 const Mode = {
   DEFAULT: 'DEFAULT',
@@ -50,7 +51,7 @@ export default class WaypointPresenter {
       destinations: this.#destinations,
       offers: this.#offers,
       onCollapseClick: this.#handleCollapseClick,
-      onSubmitForm: this.#handleSubmitForm,
+      onSubmitForm: this.#handleFormSubmit,
     });
 
     if (prevWaypointComponent === null || prevEditFormComponent === null) {
@@ -104,13 +105,25 @@ export default class WaypointPresenter {
 
   #handleExpandClick = () => this.#replaceWaypontToForm();
   #handleCollapseClick = () => this.#replaceFormToWaypoint();
-  #handleSubmitForm = (waypoint) => {
-    this.#handleDataChange(waypoint, this.#destinations, this.#offers);
+  #handleFormSubmit = (waypoint) => {
+    this.#handleDataChange(
+      UserAction.UPDATE_TASK,
+      UpdateType.MINOR,
+      waypoint,
+      this.#destinations,
+      this.#offers
+    );
     this.#replaceFormToWaypoint();
   };
 
   #handleFavoriteClick = () => {
-    this.#handleDataChange({...this.#waypoint, isFavorite: !this.#waypoint.isFavorite}, this.#destinations, this.#offers);
+    this.#handleDataChange(
+      UserAction.UPDATE_TASK,
+      UpdateType.MINOR,
+      {...this.#waypoint, isFavorite: !this.#waypoint.isFavorite},
+      this.#destinations,
+      this.#offers,
+    );
   };
 
 }

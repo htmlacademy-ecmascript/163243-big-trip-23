@@ -14,4 +14,16 @@ const SortTypes = {
   PRICE: 'price',
 };
 
-export { TripTypes, SortTypes };
+const UserAction = {
+  UPDATE_WAYPOINT: 'UPDATE_WAYPOINT',
+  ADD_WAYPOINT: 'ADD_WAYPOINT',
+  DELETE_WAYPOINT: 'DELETE_WAYPOINT',
+};
+
+const UpdateType = {
+  PATCH: 'PATCH',
+  MINOR: 'MINOR',
+  MAJOR: 'MAJOR',
+};
+
+export { TripTypes, SortTypes, UserAction, UpdateType };

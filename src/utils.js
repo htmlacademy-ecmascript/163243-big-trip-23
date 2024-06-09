@@ -40,7 +40,6 @@ export {
   getRandomNumber,
   humanizeDate,
   convertToKebabCase,
-  updateItem,
   Sorting,
   getUniqueArrayElements,
   getArrayFromObjectColumn
