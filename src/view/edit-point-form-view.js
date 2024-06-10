@@ -134,15 +134,17 @@ export default class EditPointFormView extends AbstractStatefulView {
 
   #handleCollapseClick = null;
   #handleFormSubmit = null;
+  #handleDeleteClick = null;
 
 
-  constructor({point, destinations, offers, onCollapseClick, onSubmitForm}) {
+  constructor({point, destinations, offers, onCollapseClick, onSubmitForm, onDeleteClick}) {
     super();
     this.#waypoint = point;
     this.#allDestinations = destinations;
     this.#allOffers = offers;
     this.#handleCollapseClick = onCollapseClick;
     this.#handleFormSubmit = onSubmitForm;
+    this.#handleDeleteClick = onDeleteClick;
 
 
     this._setState(EditPointFormView.parseWaypointToState(
@@ -188,6 +190,9 @@ export default class EditPointFormView extends AbstractStatefulView {
 
     this.element.querySelector('.event__input--destination')
       .addEventListener('input', this.#destinationInputHandler);
+
+    this.element.querySelector('.event__reset-btn')
+      .addEventListener('click', this.#formDeleteClickHandler);
   }
 
   #collapseClickHandler = (evt) => {
@@ -207,6 +212,11 @@ export default class EditPointFormView extends AbstractStatefulView {
     }
 
     this.#handleFormSubmit(EditPointFormView.parseStateToWaypoint(this._state));
+  };
+
+  #formDeleteClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleDeleteClick(EditPointFormView.parseStateToWaypoint(this._state));
   };
 
   #eventTypeClickHandler = (evt) => {
