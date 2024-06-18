@@ -1,21 +1,27 @@
 import TripInfoView from '../view/trip-info-view.js';
-// import FilterView from '../view/filter-view.js';
 import SortView from '../view/sort-view.js';
 import EventsListView from '../view/events-list-view.js';
 import NoPointView from '../view/no-point-view.js';
 import { render, remove, RenderPosition } from '../framework/render.js';
 import WaypointPresenter from './waypoint-presenter.js';
 import NewWaypointPresenter from './new-waypoint-presenter.js';
+import LoadingView from '../view/loading-view.js';
 import { Sorting } from '../utils/utils.js';
 import { filter } from '../utils/filter.js';
 import { SortTypes, UpdateType, UserAction, FilterTypes } from '../const.js';
+import UiBlocker from '../framework/ui-blocker/ui-blocker.js';
+
+const TimeLimit = {
+  LOWER_LIMIT: 350,
+  UPPER_LIMIT: 1000,
+};
 
 export default class GeneralPresenter {
   #eventsListComponent = new EventsListView;
   #sortComponent = null;
   #tripInfoComponent = new TripInfoView();
-  // #filterComponent = new FilterView();
   #noPointComponent = null;
+  #loadingComponent = new LoadingView();
   #tripMain;
   #tripFilters;
   #tripEvents;
@@ -25,6 +31,11 @@ export default class GeneralPresenter {
   #waypointPresenters = new Map();
   #newWaypointPresenter = null;
   #currentSortType = SortTypes.DAY;
+  #isLoading = true;
+  #uiBlocker = new UiBlocker({
+    lowerLimit: TimeLimit.LOWER_LIMIT,
+    upperLimit: TimeLimit.UPPER_LIMIT
+  });
 
   constructor({pointModel, filterModel, onNewWaypointDestroy}) {
     this.#tripMain = document.querySelector('.trip-main');
@@ -90,18 +101,35 @@ export default class GeneralPresenter {
     this.#waypointPresenters.forEach((presenter) => presenter.resetView());
   };
 
-  #handleViewAction = (actionType, updateType, update) => {
+  #handleViewAction = async (actionType, updateType, update) => {
+    this.#uiBlocker.block();
     switch (actionType) {
       case UserAction.UPDATE_WAYPOINT:
-        this.#pointModel.updateWaypoint(updateType, update);
+        this.#waypointPresenters.get(update.id).setSaving();
+        try {
+          await this.#pointModel.updateWaypoint(updateType, update);
+        } catch(err) {
+          this.#waypointPresenters.get(update.id).setAborting();
+        }
         break;
       case UserAction.ADD_WAYPOINT:
-        this.#pointModel.addWaypoint(updateType, update);
+        this.#newWaypointPresenter.setSaving();
+        try {
+          await this.#pointModel.addTask(updateType, update);
+        } catch(err) {
+          this.#newWaypointPresenter.setAborting();
+        }
         break;
       case UserAction.DELETE_WAYPOINT:
-        this.#pointModel.deleteWaypoint(updateType, update);
+        this.#waypointPresenters.get(update.id).setDeleting();
+        try {
+          await this.#pointModel.deleteTask(updateType, update);
+        } catch(err) {
+          this.#waypointPresenters.get(update.id).setAborting();
+        }
         break;
     }
+    this.#uiBlocker.unblock();
   };
 
   #handleModelEvent = (updateType, data) => {
@@ -115,6 +143,11 @@ export default class GeneralPresenter {
         break;
       case UpdateType.MAJOR:
         this.#clearTripBoard({resetSortType: true});
+        this.#renderTripBoard();
+        break;
+      case UpdateType.INIT:
+        this.#isLoading = false;
+        remove(this.#loadingComponent);
         this.#renderTripBoard();
         break;
     }
@@ -144,7 +177,7 @@ export default class GeneralPresenter {
     this.#waypointPresenters.clear();
 
     remove(this.#eventsListComponent);
-
+    remove(this.#loadingComponent);
     remove(this.#sortComponent);
     remove(this.#tripInfoComponent);
 
@@ -161,6 +194,11 @@ export default class GeneralPresenter {
     const waypoints = this.waypoints;
     const waypointsCount = waypoints.length;
 
+    if (this.#isLoading) {
+      this.#renderLoading();
+      return;
+    }
+
     if (waypointsCount === 0) {
       this.#renderNoPoints();
       return;
@@ -171,6 +209,10 @@ export default class GeneralPresenter {
 
     this.#renderTripEvents();
     waypoints.forEach((point) => this.#renderWaypoint(point, this.#pointModel.destinations, this.#pointModel.offers));
+  }
+
+  #renderLoading() {
+    render(this.#loadingComponent, this.#tripEvents, RenderPosition.AFTERBEGIN);
   }
 
 

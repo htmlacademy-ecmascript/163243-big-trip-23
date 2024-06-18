@@ -1,11 +1,18 @@
-import { mockDestinations } from '../mock/destinations.js';
-import { mockOffers } from '../mock/offers.js';
 import Observable from '../framework/observable.js';
 
 
 export default class OptionsModel extends Observable {
-  #destinations = mockDestinations;
-  #offers = mockOffers;
+  #destinations = [];
+  #offers = [];
+  #optionsApiService = null;
+
+  constructor({optionsApiService}) {
+    super();
+    this.#optionsApiService = optionsApiService;
+
+    this.#offers = this.#optionsApiService.offers;
+    this.#destinations = this.#optionsApiService.destinations;
+  }
 
   get destinations() {
     return this.#destinations;

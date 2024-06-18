@@ -65,6 +65,9 @@ const createEditPointItemTemplate = ({point, destinations, offers, isNewPoint}) 
   const checkedOffersIds = point.offers;
   const offersByType = getOffersByType(offers, point.type);
   const allDestinationsNames = [...new Set(destinations.map((destination) => destination.name))];
+  const isDisabled = point.isDisabled;
+  const isSaving = point.isDeleting;
+  const isDeleting = point.isDeleting;
 
   return `
   <li class="trip-events__item">
@@ -106,9 +109,13 @@ const createEditPointItemTemplate = ({point, destinations, offers, isNewPoint}) 
         </label>
         <input class="event__input  event__input--price" id="event-price-1" type="number" min="0" name="event-price" value="${point.basePrice}">
       </div>
-      <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
-      <button class="event__reset-btn" type="reset">
-      ${isNewPoint ? 'Cancel' : 'Delete'}
+      <button class="event__save-btn  btn  btn--blue" type="submit" ${isDisabled || isDisabled ? 'disabled' : ''}>
+      ${isSaving ? 'Saving...' : 'Save'}
+      </button>
+      <button class="event__reset-btn" type="reset" ${isDisabled ? 'disabled' : ''}>
+      ${isNewPoint ? 'Cancel' : ''}
+      ${isDeleting && !isNewPoint ? 'Deleting...' : ''}
+      ${!isNewPoint && !isDeleting ? 'Delete' : ''}
       </button>
       ${isNewPoint ? '' : rollupButtonTemplate()}
     </header>
@@ -315,6 +322,9 @@ export default class EditPointFormView extends AbstractStatefulView {
     return {...waypoint,
       hasOffers: offersByType.length,
       hasDestination: destinationDescription,
+      isDisabled: false,
+      isSaving: false,
+      isDeleting: false,
     };
   }
 
@@ -323,6 +333,9 @@ export default class EditPointFormView extends AbstractStatefulView {
 
     delete waypoint.hasOffers;
     delete waypoint.hasDestination;
+    delete waypoint.isDisabled;
+    delete waypoint.isSaving;
+    delete waypoint.isDeleting;
     return waypoint;
   }
 }
