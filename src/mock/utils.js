@@ -1,4 +1,4 @@
-import { getRandomNumber, getRandomArrayElement } from '../utils';
+import { getRandomNumber, getRandomArrayElement } from '../utils/utils';
 
 /**
  * Функция для генерации рандомного комментария/описания

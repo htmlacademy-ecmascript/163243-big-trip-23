@@ -23,8 +23,6 @@ const convertToKebabCase = (initString) =>
     : '';
 
 
-const updateItem = (items, update) => items.map((item) => item.id === update.id ? update : item);
-
 const Sorting = {
   DAY: (waypointA, waypointB) => dayjs(waypointA.dateFrom).diff(dayjs(waypointB.dateFrom)),
   TIME: (waypointA, waypointB) => {
@@ -35,13 +33,26 @@ const Sorting = {
   PRICE: (waypointA, waypointB) => waypointB.basePrice - waypointA.basePrice,
 };
 
+function isDatesEqual(dateA, dateB) {
+  return (dateA === null && dateB === null) || dayjs(dateA).isSame(dateB, 'D');
+}
+
+const isTripInFuture = (dateFrom) => dayjs(dateFrom).isAfter(dayjs(), 'D');
+
+const isTripInPresent = (dateFrom, dateTo) => dayjs(dateFrom).isBefore(dayjs(), 'M') && dayjs(dateTo).isAfter(dayjs(), 'D');
+
+const isTripInPast = (dateTo) => dayjs(dateTo).isBefore(dayjs(), 'D');
+
 export {
   getRandomArrayElement,
   getRandomNumber,
   humanizeDate,
   convertToKebabCase,
-  updateItem,
   Sorting,
   getUniqueArrayElements,
-  getArrayFromObjectColumn
+  getArrayFromObjectColumn,
+  isDatesEqual,
+  isTripInFuture,
+  isTripInPresent,
+  isTripInPast
 };

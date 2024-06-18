@@ -1,5 +1,5 @@
 import { TripTypes } from '../const.js';
-import { getRandomArrayElement } from '../utils.js';
+import { getRandomArrayElement } from '../utils/utils.js';
 import { nanoid } from 'nanoid';
 
 const mockPoints =

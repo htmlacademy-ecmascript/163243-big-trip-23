@@ -1,6 +1,8 @@
 import EditPointFormView from '../view/edit-point-form-view.js';
 import WaypointView from '../view/waypoint-view.js';
 import { render, replace, remove } from '../framework/render.js';
+import {UserAction, UpdateType} from '../const.js';
+import { isDatesEqual } from '../utils/utils.js';
 
 const Mode = {
   DEFAULT: 'DEFAULT',
@@ -22,6 +24,10 @@ export default class WaypointPresenter {
     this.#waypointListContainer = waypointListContainer;
     this.#handleDataChange = onDataChange;
     this.#handleModeChange = onModeChange;
+  }
+
+  get tasks() {
+    return this.#waypoint.points;
   }
 
   init(point, destinations, offers) {
@@ -46,7 +52,8 @@ export default class WaypointPresenter {
       destinations: this.#destinations,
       offers: this.#offers,
       onCollapseClick: this.#handleCollapseClick,
-      onSubmitForm: this.#handleSubmitForm,
+      onFormSubmit: this.#handleFormSubmit,
+      onDeleteClick: this.#handleDeleteClick
     });
 
     if (prevWaypointComponent === null || prevEditFormComponent === null) {
@@ -100,13 +107,38 @@ export default class WaypointPresenter {
 
   #handleExpandClick = () => this.#replaceWaypontToForm();
   #handleCollapseClick = () => this.#replaceFormToWaypoint();
-  #handleSubmitForm = (waypoint) => {
-    this.#handleDataChange(waypoint, this.#destinations, this.#offers);
+  #handleFormSubmit = (update) => {
+    const isMinorUpdate =
+      !isDatesEqual(this.#waypoint.dateTo, update.dateTo) ||
+      !isDatesEqual(this.#waypoint.dateFrom, update.dateFrom) ||
+      this.#waypoint.basePrice !== update.basePrice;
+
+    this.#handleDataChange(
+      UserAction.UPDATE_WAYPOINT,
+      isMinorUpdate ? UpdateType.MINOR : UpdateType.PATCH,
+      update,
+      this.#destinations,
+      this.#offers
+    );
     this.#replaceFormToWaypoint();
   };
 
   #handleFavoriteClick = () => {
-    this.#handleDataChange({...this.#waypoint, isFavorite: !this.#waypoint.isFavorite}, this.#destinations, this.#offers);
+    this.#handleDataChange(
+      UserAction.UPDATE_WAYPOINT,
+      UpdateType.MINOR,
+      {...this.#waypoint, isFavorite: !this.#waypoint.isFavorite},
+      this.#destinations,
+      this.#offers,
+    );
   };
 
+  #handleDeleteClick = (waypoint) => {
+    this.#handleDataChange(
+      UserAction.DELETE_WAYPOINT,
+      UpdateType.MINOR,
+      waypoint,
+    );
+
+  };
 }

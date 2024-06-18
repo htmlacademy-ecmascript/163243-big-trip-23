@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { humanizeDate } from '../utils.js';
+import { humanizeDate } from '../utils/utils.js';
 import AbstractView from '../framework/view/abstract-view.js';
 
 const TIME_FORMAT = 'hh:mm';
