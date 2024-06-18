@@ -1,5 +1,5 @@
 import { getRandomText } from './utils';
-import { getRandomArrayElement } from '../utils';
+import { getRandomArrayElement } from '../utils/utils';
 
 const CITIES = ['Punta Cana', 'Lissabon', 'Amsterdam', 'New York', 'Taganrog', 'Vatikan'];
 

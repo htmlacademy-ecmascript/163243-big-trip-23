@@ -1,10 +1,10 @@
 import { TripTypes } from '../const.js';
-import { humanizeDate, convertToKebabCase } from '../utils.js';
+import { humanizeDate, convertToKebabCase } from '../utils/utils.js';
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 
 const DATE_FORMAT = 'DD/MM/YY h:mm';
 
-const getCurrentDestination = (destinations, point) => destinations ? destinations.find((destination) => destination.id === point.destination) : '';
+const getCurrentDestination = (destinations, point) => point.destination ? destinations.find((destination) => destination.id === point.destination) : '';
 
 const getDestinationIdByName = (destinations, destinationName) => {
   const requiredDestination = destinations.find((destination) => destination.name === destinationName);
@@ -27,6 +27,11 @@ const getOffersByType = (offers, type) => {
   const offersByType = offers.find((offer) => offer.type === type);
   return offersByType ? offersByType.offers : '';
 };
+
+const rollupButtonTemplate = () => `
+<button class="event__rollup-btn" type="button">
+  <span class="visually-hidden">Open event</span>
+</button>`;
 
 const createOfferItemTemplate = (offer, checkedOffers) =>
   `
@@ -53,7 +58,7 @@ const createOptionsTemplate = (destination, currentDestination) =>
   <option value="${destination}" ${destination === currentDestination.name ? 'selected' : ''}></option>
   `;
 
-const createEditPointItemTemplate = ({point, destinations, offers}) => {
+const createEditPointItemTemplate = ({point, destinations, offers, isNewPoint}) => {
   const currentDestination = getCurrentDestination(destinations, point);
   const checkedOffersIds = point.offers;
   const offersByType = getOffersByType(offers, point.type);
@@ -80,7 +85,7 @@ const createEditPointItemTemplate = ({point, destinations, offers}) => {
         <label class="event__label  event__type-output" for="event-destination-1">
           ${point.type}
         </label>
-        <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" list="destination-list-1" value="${currentDestination.name}">
+        <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" list="destination-list-1" value="${ currentDestination ? currentDestination.name : ''}">
         <datalist id="destination-list-1">
           ${allDestinationsNames.map((destination) => createOptionsTemplate(destination, currentDestination)).join('')}
         </datalist>
@@ -97,13 +102,13 @@ const createEditPointItemTemplate = ({point, destinations, offers}) => {
           <span class="visually-hidden">Price</span>
           &euro;
         </label>
-        <input class="event__input  event__input--price" id="event-price-1" type="text" name="event-price" value="${point.basePrice}">
+        <input class="event__input  event__input--price" id="event-price-1" type="number" min="0" name="event-price" value="${point.basePrice}">
       </div>
       <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
-      <button class="event__reset-btn" type="reset">Delete</button>
-      <button class="event__rollup-btn" type="button">
-        <span class="visually-hidden">Open event</span>
+      <button class="event__reset-btn" type="reset">
+      ${isNewPoint ? 'Cancel' : 'Delete'}
       </button>
+      ${isNewPoint ? '' : rollupButtonTemplate()}
     </header>
     <section class="event__details">
       ${ point.hasOffers ? `
@@ -135,16 +140,18 @@ export default class EditPointFormView extends AbstractStatefulView {
   #handleCollapseClick = null;
   #handleFormSubmit = null;
   #handleDeleteClick = null;
+  #isNewPoint = false;
 
 
-  constructor({point, destinations, offers, onCollapseClick, onSubmitForm, onDeleteClick}) {
+  constructor({point, destinations, offers, onCollapseClick, onFormSubmit, onDeleteClick, isNewPoint}) {
     super();
     this.#waypoint = point;
     this.#allDestinations = destinations;
     this.#allOffers = offers;
     this.#handleCollapseClick = onCollapseClick;
-    this.#handleFormSubmit = onSubmitForm;
+    this.#handleFormSubmit = onFormSubmit;
     this.#handleDeleteClick = onDeleteClick;
+    this.#isNewPoint = isNewPoint;
 
 
     this._setState(EditPointFormView.parseWaypointToState(
@@ -160,7 +167,8 @@ export default class EditPointFormView extends AbstractStatefulView {
     return createEditPointItemTemplate({
       point: this._state,
       destinations: this.#allDestinations,
-      offers: this.#allOffers
+      offers: this.#allOffers,
+      isNewPoint: this.#isNewPoint,
     });
   }
 
@@ -176,8 +184,9 @@ export default class EditPointFormView extends AbstractStatefulView {
 
   _restoreHandlers() {
 
-    this.element.querySelector('.event__rollup-btn')
-      .addEventListener('click', this.#collapseClickHandler);
+    if(!this.#isNewPoint) {
+      this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#collapseClickHandler);
+    }
 
     this.element.querySelector('form')
       .addEventListener('submit', this.#formSubmitHandler);
@@ -243,6 +252,11 @@ export default class EditPointFormView extends AbstractStatefulView {
     evt.preventDefault();
     const id = getDestinationIdByName(this.#allDestinations, evt.target.value);
     if(id) {
+      this.updateElement({
+        destination: id,
+      });
+    }
+    if(this.#isNewPoint) {
       this.updateElement({
         destination: id,
       });

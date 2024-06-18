@@ -1,50 +1,66 @@
 import TripInfoView from '../view/trip-info-view.js';
-import FilterView from '../view/filter-view.js';
+// import FilterView from '../view/filter-view.js';
 import SortView from '../view/sort-view.js';
 import EventsListView from '../view/events-list-view.js';
-import { render, remove } from '../framework/render.js';
+import NoPointView from '../view/no-point-view.js';
+import { render, remove, RenderPosition } from '../framework/render.js';
 import WaypointPresenter from './waypoint-presenter.js';
-import { Sorting } from '../utils.js';
-import { SortTypes, UpdateType, UserAction } from '../const.js';
+import NewWaypointPresenter from './new-waypoint-presenter.js';
+import { Sorting } from '../utils/utils.js';
+import { filter } from '../utils/filter.js';
+import { SortTypes, UpdateType, UserAction, FilterTypes } from '../const.js';
 
 export default class GeneralPresenter {
   #eventsListComponent = new EventsListView;
   #sortComponent = null;
   #tripInfoComponent = new TripInfoView();
-  #filterComponent = new FilterView();
+  // #filterComponent = new FilterView();
+  #noPointComponent = null;
   #tripMain;
   #tripFilters;
   #tripEvents;
-  #pointModel;
+  #pointModel = null;
+  #filterModel = null;
+  #filterType = FilterTypes.EVERYTHING;
   #waypointPresenters = new Map();
+  #newWaypointPresenter = null;
   #currentSortType = SortTypes.DAY;
 
-  constructor(pointModel) {
+  constructor({pointModel, filterModel, onNewWaypointDestroy}) {
     this.#tripMain = document.querySelector('.trip-main');
     this.#tripFilters = document.querySelector('.trip-controls__filters');
     this.#tripEvents = document.querySelector('.trip-events');
     this.#pointModel = pointModel;
     this.#pointModel.addObserver(this.#handleModelEvent);
+    this.#filterModel = filterModel;
+    this.#filterModel.addObserver(this.#handleModelEvent);
+
+
+    this.#newWaypointPresenter = new NewWaypointPresenter({
+      waypointListContainer: this.#tripEvents,
+      onDataChange: this.#handleViewAction,
+      onDestroy: onNewWaypointDestroy
+    });
   }
 
   get waypoints() {
+    this.#filterType = this.#filterModel.filter;
+    const waypoints = this.#pointModel.points;
+    const filteredWaypoints = filter[this.#filterType](waypoints);
+
     switch (this.#currentSortType) {
       case SortTypes.DAY:
-        return [...this.#pointModel.points].sort(Sorting.DAY);
+        return filteredWaypoints.sort(Sorting.DAY);
       case SortTypes.TIME:
-        return [...this.#pointModel.points].sort(Sorting.TIME);
+        return filteredWaypoints.sort(Sorting.TIME);
       case SortTypes.PRICE:
-        return [...this.#pointModel.points].sort(Sorting.PRICE);
+        return filteredWaypoints.sort(Sorting.PRICE);
     }
-    return this.#pointModel.points;
+    return filteredWaypoints;
   }
 
   #renderTripInfo() {
-    render(this.#tripInfoComponent, this.#tripMain, 'afterbegin');
-  }
-
-  #renderFilters() {
-    render(this.#filterComponent, this.#tripFilters);
+    render(this.#tripInfoComponent, this.#tripMain, RenderPosition.AFTERBEGIN);
   }
 
   #handleSortTypeChange = (sortType) => {
@@ -62,19 +78,19 @@ export default class GeneralPresenter {
       onSortTypeChange: this.#handleSortTypeChange
     });
 
-    render(this.#sortComponent, this.#tripEvents);
+    render(this.#sortComponent, this.#tripEvents, RenderPosition.AFTERBEGIN);
   }
 
   #renderTripEvents() {
-    render(this.#eventsListComponent, this.#tripEvents);
+    render(this.#eventsListComponent, this.#tripEvents, RenderPosition.BEFOREEND);
   }
 
   #handleModeChange = () => {
+    this.#newWaypointPresenter.destroy();
     this.#waypointPresenters.forEach((presenter) => presenter.resetView());
   };
 
   #handleViewAction = (actionType, updateType, update) => {
-    console.log('actionType', actionType, 'updateType', updateType, 'update', update);
     switch (actionType) {
       case UserAction.UPDATE_WAYPOINT:
         this.#pointModel.updateWaypoint(updateType, update);
@@ -89,10 +105,9 @@ export default class GeneralPresenter {
   };
 
   #handleModelEvent = (updateType, data) => {
-    console.log(updateType, data);
     switch (updateType) {
       case UpdateType.PATCH:
-        this.#waypointPresenters.get(data.id).init(data);
+        this.#waypointPresenters.get(data.id).init(data, this.#pointModel.destinations, this.#pointModel.offers);
         break;
       case UpdateType.MINOR:
         this.#clearTripBoard();
@@ -115,8 +130,16 @@ export default class GeneralPresenter {
     this.#waypointPresenters.set(point.id, waypointPresenter);
   }
 
+  #renderNoPoints() {
+    this.#noPointComponent = new NoPointView({
+      filterType: this.#filterType
+    });
+    render(this.#noPointComponent, this.#tripEvents);
+  }
+
 
   #clearTripBoard({resetSortType = false} = {}) {
+    this.#newWaypointPresenter.destroy();
     this.#waypointPresenters.forEach((presenter) => presenter.destroy());
     this.#waypointPresenters.clear();
 
@@ -124,8 +147,10 @@ export default class GeneralPresenter {
 
     remove(this.#sortComponent);
     remove(this.#tripInfoComponent);
-    remove(this.#filterComponent);
-    // remove(this.#noWaypointsComponent);
+
+    if (this.#noPointComponent) {
+      remove(this.#noPointComponent);
+    }
 
     if (resetSortType) {
       this.#currentSortType = SortTypes.DAY;
@@ -137,12 +162,11 @@ export default class GeneralPresenter {
     const waypointsCount = waypoints.length;
 
     if (waypointsCount === 0) {
-      // this.#renderNoWaypoints();
+      this.#renderNoPoints();
       return;
     }
 
     this.#renderTripInfo();
-    this.#renderFilters();
     this.#renderSort();
 
     this.#renderTripEvents();
@@ -152,5 +176,11 @@ export default class GeneralPresenter {
 
   init() {
     this.#renderTripBoard();
+  }
+
+  createWaypoint() {
+    this.#currentSortType = SortTypes.DAY;
+    this.#filterModel.setFilter(UpdateType.MAJOR, FilterTypes.EVERYTHING);
+    this.#newWaypointPresenter.init(this.#pointModel.destinations, this.#pointModel.offers);
   }
 }

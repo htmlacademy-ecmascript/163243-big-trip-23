@@ -2,7 +2,7 @@ import EditPointFormView from '../view/edit-point-form-view.js';
 import WaypointView from '../view/waypoint-view.js';
 import { render, replace, remove } from '../framework/render.js';
 import {UserAction, UpdateType} from '../const.js';
-import { isDatesEqual } from '../utils.js';
+import { isDatesEqual } from '../utils/utils.js';
 
 const Mode = {
   DEFAULT: 'DEFAULT',
@@ -52,7 +52,7 @@ export default class WaypointPresenter {
       destinations: this.#destinations,
       offers: this.#offers,
       onCollapseClick: this.#handleCollapseClick,
-      onSubmitForm: this.#handleFormSubmit,
+      onFormSubmit: this.#handleFormSubmit,
       onDeleteClick: this.#handleDeleteClick
     });
 
