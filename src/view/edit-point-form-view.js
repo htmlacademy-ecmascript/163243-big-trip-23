@@ -1,6 +1,8 @@
 import { TripTypes } from '../const.js';
 import { humanizeDate, convertToKebabCase } from '../utils/utils.js';
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
+import flatpickr from 'flatpickr';
+import 'flatpickr/dist/flatpickr.min.css';
 
 const DATE_FORMAT = 'DD/MM/YY h:mm';
 
@@ -85,7 +87,7 @@ const createEditPointItemTemplate = ({point, destinations, offers, isNewPoint}) 
         <label class="event__label  event__type-output" for="event-destination-1">
           ${point.type}
         </label>
-        <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" list="destination-list-1" value="${ currentDestination ? currentDestination.name : ''}">
+        <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" list="destination-list-1" value="${ currentDestination ? currentDestination.name : ''}" required>
         <datalist id="destination-list-1">
           ${allDestinationsNames.map((destination) => createOptionsTemplate(destination, currentDestination)).join('')}
         </datalist>
@@ -141,6 +143,9 @@ export default class EditPointFormView extends AbstractStatefulView {
   #handleFormSubmit = null;
   #handleDeleteClick = null;
   #isNewPoint = false;
+
+  #dateFromPicker = null;
+  #dateToPicker = null;
 
 
   constructor({point, destinations, offers, onCollapseClick, onFormSubmit, onDeleteClick, isNewPoint}) {
@@ -202,7 +207,47 @@ export default class EditPointFormView extends AbstractStatefulView {
 
     this.element.querySelector('.event__reset-btn')
       .addEventListener('click', this.#formDeleteClickHandler);
+
+    this.#initDatePicker();
   }
+
+  #initDatePicker = () => {
+    const KEY = 'time_24hr';
+    const commonParameter = {
+      dateFormat: 'd/m/y H:i',
+      enableTime: true,
+      locale: { firstDayOfWeek: 1 },
+      [KEY]: true,
+    };
+    this.#dateFromPicker = flatpickr(
+      this.element.querySelector('input[name="event-start-time"]'),
+      {
+        ...commonParameter,
+        defaultDate: this._state.dateFrom,
+        onClose: this.#dateFromCloseHandler,
+        maxDate: this._state.dateTo,
+      }
+    );
+    this.#dateToPicker = flatpickr(
+      this.element.querySelector('input[name="event-end-time"]'),
+      {
+        ...commonParameter,
+        defaultDate: this._state.dateTo,
+        onClose: this.#dateToCloseHandler,
+        minDate: this._state.dateFrom,
+      }
+    );
+  };
+
+  #dateFromCloseHandler = ([userDate]) => {
+    this._setState({ dateFrom: userDate });
+    this.#dateToPicker.set('minDate', this._state.dateFrom);
+  };
+
+  #dateToCloseHandler = ([userDate]) => {
+    this._setState({ dateTo: userDate });
+    this.#dateFromPicker.set('maxDate', this._state.dateTo);
+  };
 
   #collapseClickHandler = (evt) => {
     evt.preventDefault();
