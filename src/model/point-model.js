@@ -8,7 +8,7 @@ export default class PointModel extends Observable {
   #offers = [];
   #waypointsApiService = null;
 
-  constructor({waypointsApiService, optionsModel}) {
+  constructor({waypointsApiService}) {
     super();
     this.#waypointsApiService = waypointsApiService;
     this.#waypointsApiService.waypoints.then((waypoints) => {
